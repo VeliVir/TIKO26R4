@@ -1,7 +1,7 @@
 <?php
-// Tietokantayhteyden asetukset, ei tallenneta versionhallintaan (.gitignore) 
+// Tietokantayhteyden asetuksien pohja, kopioi config.php nimiseen tiedostoon ja täytä omilla tiedoillasi.
 $host = "";
-$port = "";
+$port = "5432";
 $dbname = "";
 $user = ""; 
 $password = "";
