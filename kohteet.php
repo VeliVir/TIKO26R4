@@ -1,3 +1,36 @@
+<?php
+require_once 'db/db_connection.php';
+
+$sql_kohteet = "SELECT t.kohde_id, 
+                       t.nimi, 
+                       t.osoite, 
+                       (a.etunimi || ' ' || a.sukunimi) AS asiakas_nimi,
+                       t.asiakas_id
+                FROM Tyokohde t
+                JOIN Asiakas a ON t.asiakas_id = a.asiakas_id
+                ORDER BY t.nimi ASC";
+
+$result_kohteet = pg_query($yhteys, $sql_kohteet);
+$kohteet_data = pg_fetch_all($result_kohteet);
+
+if (!$kohteet_data) {
+    $kohteet_data = [];
+}
+
+$sql_asiakkaat = "SELECT asiakas_id, 
+                         (etunimi || ' ' || sukunimi) AS nimi 
+                  FROM Asiakas 
+                  ORDER BY sukunimi, etunimi ASC";
+
+$result_asiakkaat = pg_query($yhteys, $sql_asiakkaat);
+$asiakkaat_data = pg_fetch_all($result_asiakkaat);
+
+if (!$asiakkaat_data) {
+    $asiakkaat_data = [];
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="fi">
 <head>
@@ -75,50 +108,8 @@
     </div>
 
     <script>
-        const locations = [
-            {
-                id: 1,
-                name: 'Helsingin toimisto',
-                address: 'Mannerheimintie 10, Helsinki',
-                customer: 'Seppo Tärsky'
-            },
-            {
-                id: 2,
-                name: 'Tampereen varasto',
-                address: 'Hatanpään valtatie 18, Tampere',
-                customer: 'Seppo Tärsky'
-            },
-            {
-                id: 3,
-                name: 'Turun pääkonttori',
-                address: 'Aurakatu 5, Turku',
-                customer: 'Laura Lehtonen'
-            },
-            {
-                id: 4,
-                name: 'Oulun toimipiste',
-                address: 'Isokatu 12, Oulu',
-                customer: 'Matti Meikäläinen'
-            },
-            {
-                id: 5,
-                name: 'Jyväskylän tehdas',
-                address: 'Tehtaankatu 15, Jyväskylä',
-                customer: 'Seppo Tärsky'
-            },
-            {
-                id: 6,
-                name: 'Espoon logistiikkakeskus',
-                address: 'Logistiikkatie 8, Espoo',
-                customer: 'Laura Lehtonen'
-            }
-        ];
-
-        const customers = [
-            'Seppo Tärsky',
-            'Laura Lehtonen',
-            'Matti Meikäläinen'
-        ];
+        const locations = <?php echo json_encode($kohteet_data); ?>;
+        const customers = <?php echo json_encode(array_column($asiakkaat_data, 'nimi')); ?>;
 
         let activeLocationId = null;
         let editMode = false;
@@ -129,16 +120,16 @@
             const filter = document.querySelector('#locationFilter').value.toLowerCase();
 
             locations
-                .filter(location => location.name.toLowerCase().includes(filter))
+                .filter(location => location.nimi.toLowerCase().includes(filter))
                 .forEach(location => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${location.name}</td>
-                        <td>${location.address}</td>
-                        <td>${location.customer}</td>
+                        <td>${location.nimi}</td>
+                        <td>${location.osoite}</td>
+                        <td>${location.asiakas_nimi}</td>
                         <td class="actions-cell">
-                            <button class="button button--secondary" onclick="showLocation(${location.id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editLocation(${location.id})">Muokkaa</button>
+                            <button class="button button--secondary" onclick="showLocation(${location.kohde_id})">Näytä</button>
+                            <button class="button button--ghost" onclick="editLocation(${location.kohde_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -167,28 +158,28 @@
         }
 
         function showLocation(id) {
-            const location = locations.find(item => item.id === id);
+            const location = locations.find(item => Number(item.kohde_id) === Number(id));
             if (!location) return;
             activeLocationId = id;
             switchToDetailsView('view');
-            document.getElementById('detailsTitle').textContent = `Kohde: ${location.name}`;
-            document.getElementById('viewName').textContent = location.name;
-            document.getElementById('viewAddress').textContent = location.address;
-            document.getElementById('viewCustomer').textContent = location.customer;
-            document.getElementById('editName').value = location.name;
-            document.getElementById('editAddress').value = location.address;
-            populateCustomerDropdown(location.customer);
+            document.getElementById('detailsTitle').textContent = `Kohde: ${location.nimi}`;
+            document.getElementById('viewName').textContent = location.nimi;
+            document.getElementById('viewAddress').textContent = location.osoite;
+            document.getElementById('viewCustomer').textContent = location.asiakas_nimi;
+            document.getElementById('editName').value = location.nimi;
+            document.getElementById('editAddress').value = location.osoite;
+            populateCustomerDropdown(location.asiakas_nimi);
         }
 
         function editLocation(id) {
-            const location = locations.find(item => item.id === id);
+            const location = locations.find(item => Number(item.kohde_id) === Number(id));
             if (!location) return;
             activeLocationId = id;
             switchToDetailsView('edit');
-            document.getElementById('detailsTitle').textContent = `Muokkaa kohdetta: ${location.name}`;
-            document.getElementById('editName').value = location.name;
-            document.getElementById('editAddress').value = location.address;
-            populateCustomerDropdown(location.customer);
+            document.getElementById('detailsTitle').textContent = `Muokkaa kohdetta: ${location.nimi}`;
+            document.getElementById('editName').value = location.nimi;
+            document.getElementById('editAddress').value = location.osoite;
+            populateCustomerDropdown(location.asiakas_nimi);
         }
 
         function addLocation() {
