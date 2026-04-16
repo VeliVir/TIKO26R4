@@ -1,5 +1,28 @@
 <?php
-// Tämä sivu on asiakkaiden hallintaan. Dataa voidaan myöhemmin ladata tietokannasta.
+require_once 'db/db_connection.php';
+
+$sql_asiakkaat = "SELECT asiakas_id, 
+                         (etunimi || ' ' || sukunimi) AS nimi,
+                         puhelinnro,
+                         sahkoposti,
+                         osoite
+                  FROM Asiakas 
+                  ORDER BY sukunimi, etunimi ASC";
+
+$result_asiakkaat = pg_query($yhteys, $sql_asiakkaat);
+$asiakkaat_data = pg_fetch_all($result_asiakkaat);
+
+if (!$asiakkaat_data) {
+    $asiakkaat_data = [];
+}
+
+$sql_kohteet = "SELECT kohde_id, asiakas_id, nimi, osoite FROM Tyokohde";
+$result_kohteet = pg_query($yhteys, $sql_kohteet);
+$kohteet_data = pg_fetch_all($result_kohteet);
+
+if (!$kohteet_data) {
+    $kohteet_data = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="fi">
@@ -102,37 +125,8 @@
     </div>
 
     <script>
-        // Tässä jotain placeholdereita asiakkaille. Nämä voidaan myöhemmin hakea tietokannasta.
-        const customers = [
-            {
-                id: 1,
-                name: 'Seppo Tärsky',
-                phone: '040 123 4567',
-                email: 'seppo.tarsky@tuni.fi',
-                locations: [
-                    { name: 'Helsingin toimisto', address: 'Mannerheimintie 10, Helsinki' },
-                    { name: 'Tampereen varasto', address: 'Hatanpään valtatie 18, Tampere' }
-                ]
-            },
-            {
-                id: 2,
-                name: 'Marko Junkkari',
-                phone: '050 987 6543',
-                email: 'marko.junkkari@tuni.fi',
-                locations: [
-                    { name: 'Turun pääkonttori', address: 'Aurakatu 5, Turku' }
-                ]
-            },
-            {
-                id: 3,
-                name: 'Matti Meikäläinen',
-                phone: '044 321 7689',
-                email: 'matti.meikalainen@example.com',
-                locations: [
-                    { name: 'Oulun toimipiste', address: 'Isokatu 12, Oulu' }
-                ]
-            }
-        ];
+        const customers = <?php echo json_encode($asiakkaat_data); ?>;
+        const locations = <?php echo json_encode($kohteet_data); ?>;
 
         let activeCustomerId = null;
         let editMode = false;
@@ -143,16 +137,16 @@
             const filter = document.querySelector('#customerFilter').value.toLowerCase();
 
             customers
-                .filter(customer => customer.name.toLowerCase().includes(filter))
+                .filter(customer => customer.nimi.toLowerCase().includes(filter))
                 .forEach(customer => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${customer.name}</td>
-                        <td>${customer.phone}</td>
-                        <td>${customer.email}</td>
+                        <td>${customer.nimi}</td>
+                        <td>${customer.puhelinnro}</td>
+                        <td>${customer.sahkoposti}</td>
                         <td class="actions-cell">
-                            <button class="button button--secondary" onclick="showCustomer(${customer.id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editCustomer(${customer.id})">Muokkaa</button>
+                            <button class="button button--secondary" onclick="showCustomer(${customer.asiakas_id})">Näytä</button>
+                            <button class="button button--ghost" onclick="editCustomer(${customer.asiakas_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -182,30 +176,30 @@
         }
 
         function showCustomer(id) {
-            const customer = customers.find(item => item.id === id);
+            const customer = customers.find(item => item.asiakas_id == id);
             if (!customer) return;
             activeCustomerId = id;
             switchToDetailsView('view');
-            document.getElementById('detailsTitle').textContent = `Asiakas: ${customer.name}`;
-            document.getElementById('viewName').textContent = customer.name;
-            document.getElementById('viewPhone').textContent = customer.phone;
-            document.getElementById('viewEmail').textContent = customer.email;
-            document.getElementById('editName').value = customer.name;
-            document.getElementById('editPhone').value = customer.phone;
-            document.getElementById('editEmail').value = customer.email;
-            renderLocations(customer.locations);
+            document.getElementById('detailsTitle').textContent = `Asiakas: ${customer.nimi}`;
+            document.getElementById('viewName').textContent = customer.nimi;
+            document.getElementById('viewPhone').textContent = customer.puhelinnro;
+            document.getElementById('viewEmail').textContent = customer.sahkoposti;
+            document.getElementById('editName').value = customer.nimi;
+            document.getElementById('editPhone').value = customer.puhelinnro;
+            document.getElementById('editEmail').value = customer.sahkoposti;
+            renderLocations(locations);
         }
 
         function editCustomer(id) {
-            const customer = customers.find(item => item.id === id);
+            const customer = customers.find(item => item.asiakas_id == id);
             if (!customer) return;
             activeCustomerId = id;
             switchToDetailsView('edit');
-            document.getElementById('detailsTitle').textContent = `Muokkaa asiakasta: ${customer.name}`;
-            document.getElementById('editName').value = customer.name;
-            document.getElementById('editPhone').value = customer.phone;
-            document.getElementById('editEmail').value = customer.email;
-            renderLocations(customer.locations);
+            document.getElementById('detailsTitle').textContent = `Muokkaa asiakasta: ${customer.nimi}`;
+            document.getElementById('editName').value = customer.nimi;
+            document.getElementById('editPhone').value = customer.puhelinnro;
+            document.getElementById('editEmail').value = customer.sahkoposti;
+            renderLocations(locations);
         }
 
         function addCustomer() {
@@ -229,42 +223,46 @@
             }
 
             if (activeCustomerId) {
-                const customer = customers.find(item => item.id === activeCustomerId);
+                const customer = customers.find(item => item.id == activeCustomerId);
                 if (!customer) return;
-                customer.name = name;
-                customer.phone = phone;
-                customer.email = email;
+                customer.nimi = name;
+                customer.puhelinnro = phone;
+                customer.sahkoposti = email;
             } else {
-                customers.push({
+                /*customers.push({
                     id: Date.now(),
                     name,
                     phone,
                     email,
                     locations: []
-                });
+                });*/
             }
 
             renderCustomerRows();
             backToMain();
         }
 
-        function renderLocations(locations) {
+        function renderLocations(allLocations) {
+            if (!allLocations) return;
             const tbody = document.querySelector('#locationTable tbody');
             tbody.innerHTML = '';
-            if (locations.length === 0) {
+
+            const filteredLocations = allLocations.filter(loc => loc.asiakas_id == activeCustomerId);
+
+            if (filteredLocations.length === 0) {
                 const row = document.createElement('tr');
                 row.innerHTML = '<td colspan="3" class="empty-row">Ei sijainteja</td>';
                 tbody.appendChild(row);
                 return;
             }
 
-            locations.forEach((location, index) => {
+            filteredLocations.forEach(location => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${location.name}</td>
-                    <td>${location.address}</td>
+                    <td>${location.nimi}</td>
+                    <td>${location.osoite}</td>
                     <td class="actions-cell">
-                        <button class="button button--ghost" onclick="viewLocation(${location.id})">Näytä</button>
+                        <button class="button button--ghost" onclick="viewLocation(${location.kohde_id})">Näytä</button>
                     </td>
                 `;
                 tbody.appendChild(row);
