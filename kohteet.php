@@ -109,7 +109,7 @@ if (!$asiakkaat_data) {
 
     <script>
         const locations = <?php echo json_encode($kohteet_data); ?>;
-        const customers = <?php echo json_encode(array_column($asiakkaat_data, 'nimi')); ?>;
+        const customers = <?php echo json_encode($asiakkaat_data); ?>;
 
         let activeLocationId = null;
         let editMode = false;
@@ -196,38 +196,59 @@ if (!$asiakkaat_data) {
             select.innerHTML = '<option value="">Valitse asiakas</option>';
             customers.forEach(customer => {
                 const option = document.createElement('option');
-                option.value = customer;
-                option.textContent = customer;
-                if (customer === selectedCustomer) {
+                option.value = customer.asiakas_id;
+                option.textContent = customer.nimi;
+                if (customer.nimi === selectedCustomer) {
                     option.selected = true;
                 }
                 select.appendChild(option);
             });
         }
 
-        function saveLocation() {
+        async function saveLocation() {
             const name = document.getElementById('editName').value.trim();
             const address = document.getElementById('editAddress').value.trim();
-            const customer = document.getElementById('editCustomer').value;
+            const customerId = document.getElementById('editCustomer').value;
 
-            if (!name || !address || !customer) {
+            if (!name || !address || !customerId) {
                 alert('Täytä kaikki kentät ennen tallentamista.');
                 return;
             }
+            
+            const payload = {
+                nimi: name,
+                osoite: address,
+                asiakas_id: parseInt(customerId)
+            };
 
+            // Valitaan muokataanko vai tehdäänkö uusi kohde
+            const method = activeLocationId ? 'PUT' : 'POST';
             if (activeLocationId) {
-                const location = locations.find(item => item.id === activeLocationId);
-                if (!location) return;
-                location.name = name;
-                location.address = address;
-                location.customer = customer;
-            } else {
-                locations.push({
-                    id: Date.now(),
-                    name,
-                    address,
-                    customer
+                payload.kohde_id = activeLocationId;
+            }
+
+            try {
+                // Käytetään molemmissa "virallisena" metodina POST, koska PUT antaa 403 forbidden virheen.
+                // real_method lähettää oikean metodin.
+                const response = await fetch('methods/kohteet_methods.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...payload,
+                        real_method: method // Kerrotaan PHP:lle oikea toiminto
+                    })
                 });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert("Tallennus epäonnistui.");
+                }
+            } catch (e) {
+                console.error("Virhe: ", e);
+                alert("Yhteysvirhe palvelimeen.");
             }
 
             renderLocationRows();
