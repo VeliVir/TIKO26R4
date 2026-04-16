@@ -5,28 +5,34 @@ $data = json_decode(file_get_contents("php://input"), true);
 $method = $data['real_method'] ?? $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
-
+    
     case 'POST': // CREATE
-        $sql = "INSERT INTO Tyokohde (nimi, osoite, asiakas_id)
-                VALUES ($1, $2, $3)";
+        $sql = "INSERT INTO Asiakas (etunimi, sukunimi, puhelinnro, sahkoposti)
+                VALUES ($1, $2, $3, $4)";
         pg_query_params($yhteys, $sql, [
-            $data['nimi'],
-            $data['osoite'],
-            $data['asiakas_id']
+            $data['etunimi'],
+            $data['sukunimi'],
+            $data['puhelinnro'],
+            $data['sahkoposti']
         ]);
         echo json_encode(['success' => true]);
         break;
 
     case 'PUT': // UPDATE
-        $sql = "UPDATE Tyokohde
-                SET nimi = $1,
-                    osoite = $2,
-                    asiakas_id = $3,
+        $sql = "UPDATE Asiakas
+                SET etunimi = $1,
+                    sukunimi = $2,
+                    puhelinnro = $3,
+                    sahkoposti = $4,
+                    osoite = $5,
                     muokattu = CURRENT_TIMESTAMP
-                WHERE kohde_id = $4";
+                WHERE asiakas_id = $6";
 
         pg_query_params($yhteys, $sql, [
-            $data['nimi'],
+            $data['etunimi'],
+            $data['sukunimi'],
+            $data['puhelinnro'],
+            $data['sahkoposti'],
             $data['osoite'],
             $data['asiakas_id'],
             $data['kohde_id']

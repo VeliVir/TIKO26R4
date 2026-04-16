@@ -212,7 +212,7 @@ if (!$kohteet_data) {
             renderLocations([]);
         }
 
-        function saveCustomer() {
+        async function saveCustomer() {
             const name = document.getElementById('editName').value.trim();
             const phone = document.getElementById('editPhone').value.trim();
             const email = document.getElementById('editEmail').value.trim();
@@ -222,20 +222,47 @@ if (!$kohteet_data) {
                 return;
             }
 
+            const parts = name.split(' ');
+            const firstname = parts[0];
+            const lastname = parts.slice(1).join(' ');
+
+            if (!lastname) {
+                alert('Syötä sekä etu- että sukunimi.');
+                return;
+            }
+
+            const payload = {
+                etunimi: firstname,
+                sukunimi: lastname,
+                puhelinnro: phone,
+                sahkoposti: email
+            };
+
+            const method = activeCustomerId ? 'PUT' : 'POST';
             if (activeCustomerId) {
-                const customer = customers.find(item => item.id == activeCustomerId);
-                if (!customer) return;
-                customer.nimi = name;
-                customer.puhelinnro = phone;
-                customer.sahkoposti = email;
-            } else {
-                /*customers.push({
-                    id: Date.now(),
-                    name,
-                    phone,
-                    email,
-                    locations: []
-                });*/
+                payload.asiakas_id = activeCustomerId;
+            }
+
+            try {
+                const response = await fetch('methods/asiakkaat_methods.php', {
+                    method: 'POST', // Käytetään aina POSTia 403-virheen välttämiseksi
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...payload,
+                        real_method: method // Kerrotaan PHP:lle oikea toiminto
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert("Tallennus epäonnistui: " + (result.error || "Tuntematon virhe"));
+                }
+            } catch (e) {
+                console.error("Virhe: ", e);
+                alert("Yhteysvirhe palvelimeen.");
             }
 
             renderCustomerRows();
@@ -243,12 +270,17 @@ if (!$kohteet_data) {
         }
 
         function renderLocations(allLocations) {
-            if (!allLocations) return;
             const tbody = document.querySelector('#locationTable tbody');
             tbody.innerHTML = '';
 
-            const filteredLocations = allLocations.filter(loc => loc.asiakas_id == activeCustomerId);
+            if (!allLocations || !activeCustomerId) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="3" class="empty-row">Ei sijainteja</td>';
+                tbody.appendChild(row);
+                return;
+            }
 
+            const filteredLocations = allLocations.filter(loc => loc.asiakas_id == activeCustomerId);
             if (filteredLocations.length === 0) {
                 const row = document.createElement('tr');
                 row.innerHTML = '<td colspan="3" class="empty-row">Ei sijainteja</td>';
@@ -276,7 +308,7 @@ if (!$kohteet_data) {
             document.getElementById('newLocationName').focus();
         }
 
-        function saveNewLocation() {
+        async function saveNewLocation() {
             const name = document.getElementById('newLocationName').value.trim();
             const address = document.getElementById('newLocationAddress').value.trim();
 
@@ -290,23 +322,31 @@ if (!$kohteet_data) {
                 return;
             }
 
-            const customer = customers.find(c => c.id === activeCustomerId);
-            if (!customer) {
-                alert('Virhe: Asiakasta ei löytynyt.');
-                return;
+            try {
+                const response = await fetch('methods/kohteet_methods.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nimi: name,
+                        osoite: address,
+                        asiakas_id: activeCustomerId,
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('addLocationCard').classList.add('hidden');
+
+                    window.location.reload();
+                } else {
+                    alert('Tallennus epäonnistui: ' + result.error);
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe palvelimeen.');
             }
-
-            // Add new location to customer's locations
-            customer.locations.push({
-                name: name,
-                address: address
-            });
-
-            // Hide the add location card
-            document.getElementById('addLocationCard').classList.add('hidden');
-
-            // Re-render locations
-            renderLocations(customer.locations);
         }
 
         function cancelAddLocation() {
