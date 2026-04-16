@@ -4,7 +4,7 @@
 // HUOM!!!!!
 require_once 'db_connection.php'; 
 
-$sql_file = 'schema.sql';
+$sql_file = '../sql/schema.sql';
 
 if (!file_exists($sql_file)) {
     echo "Tiedostoa $sql_file ei löytynyt<br>";
@@ -21,7 +21,7 @@ if (!$result) {
     echo "Tietokanta tyhjennetty ja pöydät luotu<br>";
 }
 
-$testdata_file = 'testdata.sql';
+$testdata_file = '../sql/testdata.sql';
 
 if (!file_exists($testdata_file)) {
     echo "Tiedostoa $testdata_file ei löytynyt<br>";
