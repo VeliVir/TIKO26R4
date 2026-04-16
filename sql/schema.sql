@@ -1,3 +1,13 @@
+DROP TABLE IF EXISTS Sopimus_suoritus CASCADE;
+DROP TABLE IF EXISTS Sopimus_tarvike CASCADE;
+DROP TABLE IF EXISTS Lasku CASCADE;
+DROP TABLE IF EXISTS Sopimus CASCADE;
+DROP TABLE IF EXISTS Tyokohde CASCADE;
+DROP TABLE IF EXISTS Asiakas CASCADE;
+DROP TABLE IF EXISTS Tarvike CASCADE;
+DROP TABLE IF EXISTS Toimittaja CASCADE;
+DROP TABLE IF EXISTS Suoritus CASCADE;
+
 CREATE TABLE Asiakas (
     asiakas_id SERIAL PRIMARY KEY,
     etunimi VARCHAR(50) NOT NULL,
@@ -8,7 +18,7 @@ CREATE TABLE Asiakas (
     luotu TIMESTAMP,
     muokattu TIMESTAMP
 );
-¨
+
 CREATE TABLE Tyokohde (
     kohde_id SERIAL PRIMARY KEY,
     asiakas_id INT NOT NULL REFERENCES Asiakas(asiakas_id),
@@ -35,15 +45,13 @@ CREATE TABLE Lasku (
     erapaiva DATE NOT NULL,
     maksupaiva DATE
 );
- 
-CREATE TABLE Sopimus_tarvike (
-    sopimus_id INT NOT NULL REFERENCES sopimus(sopimus_id),
-    tarvike_id INT NOT NULL REFERENCES tarvike(tarvike_id),
-    maara NUMERIC(12,3),
-    hintatekija NUMERIC(12,2) DEFAULT 1.00,
-    PRIMARY KEY (sopimus_id, tarvike_id)
+
+CREATE TABLE Toimittaja (
+    toimittaja_id SERIAL PRIMARY KEY,
+    nimi VARCHAR(50),
+    osoite VARCHAR(100)
 );
- 
+
 CREATE TABLE Tarvike (
     tarvike_id SERIAL PRIMARY KEY,
     toimittaja_id INT NOT NULL REFERENCES Toimittaja(toimittaja_id),
@@ -57,13 +65,21 @@ CREATE TABLE Tarvike (
     muokattu TIMESTAMP,
     poistettu TIMESTAMP
 );
- 
-CREATE TABLE Toimittaja (
-    toimittaja_id SERIAL PRIMARY KEY,
-    nimi VARCHAR(50),
-    osoite VARCHAR(100)
+
+CREATE TABLE Sopimus_tarvike (
+    sopimus_id INT NOT NULL REFERENCES Sopimus(sopimus_id),
+    tarvike_id INT NOT NULL REFERENCES Tarvike(tarvike_id),
+    maara NUMERIC(12,3),
+    hintatekija NUMERIC(12,2) DEFAULT 1.00,
+    PRIMARY KEY (sopimus_id, tarvike_id)
 );
- 
+
+CREATE TABLE Suoritus (
+    suoritus_id SERIAL PRIMARY KEY,
+    nimi VARCHAR(50),
+    hinta NUMERIC(12,2)
+);
+
 CREATE TABLE Sopimus_suoritus (
     suoritus_id INT NOT NULL REFERENCES Suoritus(suoritus_id),
     sopimus_id INT NOT NULL REFERENCES Sopimus(sopimus_id),
@@ -71,9 +87,4 @@ CREATE TABLE Sopimus_suoritus (
     hintatekija NUMERIC(12,2) DEFAULT 1.00,
     PRIMARY KEY (sopimus_id, suoritus_id)
 );
- 
-CREATE TABLE Suoritus (
-    suoritus_id SERIAL PRIMARY KEY,
-    nimi VARCHAR(50),
-    hinta NUMERIC(12,2)
-);
+
