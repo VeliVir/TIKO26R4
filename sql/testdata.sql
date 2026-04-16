@@ -1,4 +1,3 @@
--- Ei sisällä luonti/muokkaus päivämääriä.
 INSERT INTO Toimittaja (nimi, osoite) VALUES 
 ('Toimittaja Oy', 'Teollisuustie 1, Vantaa'),
 ('Rakennusmateriaali Ltd', 'Kivimiehentie 4, Espoo'),

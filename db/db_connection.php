@@ -1,5 +1,5 @@
 <?php
-require_once '../../config.php';
+require_once '../config.php';
 
 $yhteys = pg_connect($y_tiedot);
 

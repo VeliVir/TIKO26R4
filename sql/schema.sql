@@ -15,7 +15,7 @@ CREATE TABLE Asiakas (
     osoite VARCHAR(100),
     puhelinnro VARCHAR(50),
     sahkoposti VARCHAR(50),
-    luotu TIMESTAMP,
+    luotu TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     muokattu TIMESTAMP
 );
 
@@ -24,7 +24,7 @@ CREATE TABLE Tyokohde (
     asiakas_id INT NOT NULL REFERENCES Asiakas(asiakas_id),
     nimi VARCHAR(50) NOT NULL,
     osoite VARCHAR(100),
-    luotu TIMESTAMP,
+    luotu TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     muokattu TIMESTAMP
 );
  
@@ -33,7 +33,7 @@ CREATE TABLE Sopimus (
     kohde_id INT NOT NULL REFERENCES Tyokohde(kohde_id),
     tyyppi VARCHAR(50),
     osia_laskussa INT,
-    luotu TIMESTAMP,
+    luotu TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     muokattu TIMESTAMP
 );
  
@@ -61,8 +61,8 @@ CREATE TABLE Tarvike (
     hankintahinta NUMERIC(12,2),
     varastossa INT,
     tyyppi VARCHAR(50),
-    luotu TIMESTAMP,
-    muokattu TIMESTAMP,
+    luotu TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    muokattu TIMESTAMP ,
     poistettu TIMESTAMP
 );
 
