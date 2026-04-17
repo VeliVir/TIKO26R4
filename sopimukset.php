@@ -137,59 +137,27 @@
     </div>
 
     <script>
-        const agreements = [
-            {
-                id: 1,
-                created: '2026-04-01',
-                type: 'Urakka',
-                installments: 3,
-                location: 'Helsingin toimisto',
-                customer: 'Seppo Tärsky',
-                amount: 1290.00,
-                billed: false,
-                accessories: [
-                    { item: 'Ruuvimeisseli', quantity: 2, factor: 1.1 }
-                ],
-                work: [
-                    { type: 'Työ', quantity: 5, factor: 1.2 }
-                ]
-            },
-            {
-                id: 2,
-                created: '2026-03-12',
-                type: 'Tuntihinta',
-                installments: 1,
-                location: 'Tampereen varasto',
-                customer: 'Laura Lehtonen',
-                amount: 720.50,
-                billed: true,
-                accessories: [
-                    { item: 'Poranterä 10mm', quantity: 10, factor: 1.0 }
-                ],
-                work: [
-                    { type: 'Suunnittelu', quantity: 2, factor: 1.3 }
-                ]
-            },
-            {
-                id: 3,
-                created: '2026-04-08',
-                type: 'Urakka',
-                installments: 2,
-                location: 'Turun pääkonttori',
-                customer: 'Matti Meikäläinen',
-                amount: 450.00,
-                billed: false,
-                accessories: [],
-                work: []
-            }
-        ];
+        let agreements = [];
+        let customers = [];
+        let locations = [];
+
+        async function init() {
+            const res = await fetch('methods/sopimukset_methods.php');
+            const data = await res.json();
+
+            if (!data.success) return;
+
+            agreements = data.agreements;
+            customers = data.customers;
+            locations = data.locations;
+
+            renderAgreementRows();
+        }
+
+        init();
 
         let activeAgreementId = null;
         let editMode = false;
-
-        function formatCurrency(value) {
-            return `${value.toFixed(2).replace('.', ',')} €`;
-        }
 
         function renderAgreementRows() {
             const tbody = document.querySelector('#agreementTable tbody');
@@ -197,18 +165,18 @@
             const filter = document.querySelector('#agreementFilter').value.toLowerCase();
 
             agreements
-                .filter(agreement => agreement.customer.toLowerCase().includes(filter))
+                .filter(a => a.asiakas_nimi.toLowerCase().includes(filter))
                 .forEach(agreement => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${agreement.created}</td>
-                        <td>${agreement.location}</td>
-                        <td>${agreement.customer}</td>
-                        <td>${formatCurrency(agreement.amount)}</td>
-                        <td>${agreement.billed ? 'Kyllä' : 'Ei'}</td>
+                        <td>${agreement.luotu}</td>
+                        <td>${agreement.kohde_nimi}</td>
+                        <td>${agreement.asiakas_nimi}</td>
+                        <td>${agreement.kokonaishinta}</td>
+                        <td>-</td>
                         <td class="actions-cell">
-                            <button class="button button--secondary" onclick="showAgreement(${agreement.id})">Näytä</button>
-                            ${agreement.billed ? '' : `<button class="button button--ghost" onclick="editAgreement(${agreement.id})">Muokkaa</button>`}
+                            <button class="button button--secondary" onclick="showAgreement(${agreement.sopimus_id})">Näytä</button>
+                            <button class="button button--ghost" onclick="editAgreement(${agreement.sopimus_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -445,7 +413,6 @@
             backToMain();
         }
 
-        renderAgreementRows();
     </script>
 </body>
 </html>
