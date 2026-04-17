@@ -125,8 +125,31 @@ if (!$kohteet_data) {
     </div>
 
     <script>
-        const customers = <?php echo json_encode($asiakkaat_data); ?>;
-        const locations = <?php echo json_encode($kohteet_data); ?>;
+        let customers = [];
+        let locations = [];
+
+        async function init() {
+            try {
+                const response = await fetch('methods/asiakkaat_methods.php');
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('Datan haku epäonnistui');
+                    return;
+                }
+
+                customers = data.customers;
+                locations = data.locations;
+
+                renderCustomerRows();
+
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe');
+            }
+        }
+
+        init();
 
         let activeCustomerId = null;
         let editMode = false;
@@ -357,7 +380,6 @@ if (!$kohteet_data) {
             window.location.href = `kohteet.php?location=${locationId}`;
         }
 
-        renderCustomerRows();
     </script>
 </body>
 </html>

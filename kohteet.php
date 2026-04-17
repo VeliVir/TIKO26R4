@@ -1,36 +1,3 @@
-<?php
-require_once 'db/db_connection.php';
-
-$sql_kohteet = "SELECT t.kohde_id, 
-                       t.nimi, 
-                       t.osoite, 
-                       (a.etunimi || ' ' || a.sukunimi) AS asiakas_nimi,
-                       t.asiakas_id
-                FROM Tyokohde t
-                JOIN Asiakas a ON t.asiakas_id = a.asiakas_id
-                ORDER BY t.nimi ASC";
-
-$result_kohteet = pg_query($yhteys, $sql_kohteet);
-$kohteet_data = pg_fetch_all($result_kohteet);
-
-if (!$kohteet_data) {
-    $kohteet_data = [];
-}
-
-$sql_asiakkaat = "SELECT asiakas_id, 
-                         (etunimi || ' ' || sukunimi) AS nimi 
-                  FROM Asiakas 
-                  ORDER BY sukunimi, etunimi ASC";
-
-$result_asiakkaat = pg_query($yhteys, $sql_asiakkaat);
-$asiakkaat_data = pg_fetch_all($result_asiakkaat);
-
-if (!$asiakkaat_data) {
-    $asiakkaat_data = [];
-}
-
-?>
-
 <!DOCTYPE html>
 <html lang="fi">
 <head>
@@ -108,8 +75,31 @@ if (!$asiakkaat_data) {
     </div>
 
     <script>
-        const locations = <?php echo json_encode($kohteet_data); ?>;
-        const customers = <?php echo json_encode($asiakkaat_data); ?>;
+        let customers = [];
+        let locations = [];
+
+        async function init() {
+            try {
+                const response = await fetch('methods/kohteet_methods.php');
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('Datan haku epäonnistui');
+                    return;
+                }
+
+                customers = data.customers;
+                locations = data.locations;
+
+                renderLocationRows();
+
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe');
+            }
+        }
+
+        init();
 
         let activeLocationId = null;
         let editMode = false;
@@ -264,7 +254,6 @@ if (!$asiakkaat_data) {
             }
         }
 
-        renderLocationRows();
         checkUrlParameters();
     </script>
 </body>
