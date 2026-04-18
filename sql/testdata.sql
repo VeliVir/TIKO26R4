@@ -14,7 +14,8 @@ INSERT INTO Tyokohde (asiakas_id, nimi, osoite) VALUES
 (2, 'Nurmitien asunto', 'Nurmitie 5, Aitolahti'),
 (2, 'Huitsinnevan toimisto', 'Kasinopolku 11, Huitsinneva'),
 (3, 'Puotonkorven tehdas', 'Puotonkorventie 1, Puotonkorpi'),
-(3, 'Masalantien asunto', 'Masalantie 12, Kangasala');
+(3, 'Masalantien asunto', 'Masalantie 12, Kangasala'),
+(3, 'Presidentinlinna', 'Mariankatu 2, Helsinki');
 
 INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa) VALUES 
 (1, 'USB-kaapeli', 'Deltaco', 'kpl', 4.00, 24),
@@ -36,7 +37,8 @@ INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu) VALUES
 (2, 'Tuntihinta', 1, '2026-01-02'),
 (4, 'Tuntihinta', 1, '2026-01-03'),
 (3, 'Urakka', 1, '2026-02-01'),
-(5, 'Tuntihinta', 1, '2026-02-02');
+(5, 'Tuntihinta', 1, '2026-02-02'),
+(6, 'Urakka', 1, '2026-02-06');
 
 INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VALUES 
 (1, NULL, '2025-10-01', '2025-10-15', NULL),
@@ -58,7 +60,8 @@ INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES
 (3, 6, 1, (1.0 - 0.05) * 1.24),
 (4, 7, 2, 1.24),
 (5, 2, 3, 1.24), 
-(5, 4, 1, 1.24);
+(5, 4, 1, 1.24),
+(6, 4, 3, 1.24);
 
 INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija, urakka_hinta) VALUES 
 (1, 1, NULL, 1.24, 100.00),
@@ -69,4 +72,5 @@ INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hinta
 (3, 4, 3, 1.00, NULL),
 (4, 1, NULL, 1.12, 50.00),
 (5, 2, 3, 1.00, NULL),
-(5, 3, 12, 1.00, NULL);
+(5, 3, 12, 1.00, NULL),
+(6, 1, NULL, 1.12, 5004.21);

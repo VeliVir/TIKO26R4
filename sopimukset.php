@@ -176,7 +176,7 @@
                         <td>${agreement.kohde_nimi}</td>
                         <td>${agreement.asiakas_nimi}</td>
                         <td>${formatCurrency(agreement.kokonaishinta)}</td>
-                        <td>${agreement.laskutettu ? 'Kyllä' : 'Ei'}</td>
+                        <td>${Number(agreement.laskutettu) ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showAgreement(${agreement.sopimus_id})">Näytä</button>
                             <button class="button button--ghost" onclick="editAgreement(${agreement.sopimus_id})">Muokkaa</button>
