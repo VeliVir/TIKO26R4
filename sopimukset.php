@@ -110,7 +110,7 @@
                             </select></div>
                             <div class="details-row"><label for="editInstallments">Osia laskussa</label><input type="number" id="editInstallments" min="1" step="1"></div>
                             <div class="details-row">
-                                <label for="editLocation">Asiakas</label>
+                                <label for="editLocation">Työkohde</label>
                                 <select id="editLocation">
                                     <option value="">Valitse Työkohde</option>
                                 </select>
@@ -511,8 +511,8 @@
             activeAgreementId = id;
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = `Muokkaa sopimusta: ${agreement.asiakas_nimi}`;
-            document.getElementById('editType').value = agreement.tyyppi;
-            document.getElementById('editInstallments').value = agreement.osia_laskussa;
+            document.getElementById('editType').value = agreement.tyyppi ?? '';
+            document.getElementById('editInstallments').value = agreement.osia_laskussa ?? 1;
 
             const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id) || [];
             const agreementWork = work.filter(w => w.sopimus_id == agreement.sopimus_id) || [];
@@ -529,10 +529,8 @@
             document.getElementById('detailsTitle').textContent = 'Uusi sopimus';
             document.getElementById('editType').value = 'Urakka';
             document.getElementById('editInstallments').value = 0;
-            document.getElementById('editCreated').value = new Date().toISOString().split('T')[0];
             document.getElementById('editLocation').value = '';
             document.getElementById('editCustomer').value = '';
-            document.getElementById('editAmount').value = '';
             populateAccessoryRows([]);
             populateWorkRows([]);
         }
