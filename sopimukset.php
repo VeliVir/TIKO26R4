@@ -30,7 +30,7 @@
                             <th>Luontipäivämäärä</th>
                             <th>Työkohde</th>
                             <th>Asiakas</th>
-                            <th>Summa</th>
+                            <th>Summa (Ilman ALV)</th>
                             <th>Laskutettu</th>
                             <th>Toiminnot</th>
                         </tr>
@@ -56,7 +56,8 @@
                     <div class="details-row"><span>Viimeksi muokattu</span><span id="viewUpdated"></span></div>
                     <div class="details-row"><span>Työkohde</span><span id="viewLocation"></span></div>
                     <div class="details-row"><span>Asiakas</span><span id="viewCustomer"></span></div>
-                    <div class="details-row"><span>Summa</span><span id="viewAmount"></span></div>
+                    <div class="details-row"><span>Summa (Ilman ALV)</span><span id="viewAmount"></span></div>
+                    <div class="details-row"><span>Summa (ALV)</span><span id="viewAmountALV"></span></div>
                     <div class="details-row"><span>Laskutettu</span><span id="viewBilled"></span></div>
                 </div>
 
@@ -65,10 +66,13 @@
                     <div class="details-row details-field-header">
                         <span>Tarvike</span>
                         <span>Määrä</span>
-                        <span>Kerroin</span>
-                        <span></span>
+                        <span>Alennus %</span>
+                        <span>Yksikköhinta</span>
+                        <span>Summa (Ilman ALV)</span>
+                        <span>ALV</span>
+                        <span>Loppuhinta</span>
                     </div>
-                    <div id="viewAccessoriesList"></div>
+                    <div class="details-table-row" id="viewAccessoriesList"></div>
                 </div>
 
                 <div class="details-card full-width" id="agreementWorkView">
@@ -76,10 +80,24 @@
                     <div class="details-row details-field-header">
                         <span>Työ</span>
                         <span>Määrä</span>
-                        <span>Kerroin</span>
-                        <span></span>
+                        <span>Alennus %</span>
+                        <span>Hinta (Ilman ALV ja alennuksia)</span>
+                        <span>Hinta (Ilman ALV)</span>
+                        <span>ALV</span>
+                        <span>Loppuhinta</span>
                     </div>
-                    <div id="viewWorkList"></div>
+                    <div class="details-table-row" id="viewWorkList"></div>
+                </div>
+
+                <div class="details-card full-width" id="agreementUrakkaWorkView">
+                    <h3>Työsuoritus</h3>
+                    <div class="details-row details-field-header">
+                        <span>Työ</span>
+                        <span>Hinta (Ilman ALV)</span>
+                        <span>ALV</span>
+                        <span>Loppuhinta</span>
+                    </div>
+                    <div class="details-table-row" id="viewUrakkaWorkList"></div>
                 </div>
 
                 <div class="details-card full-width edit-panel-wrapper" id="editPanelWrapper">
@@ -112,7 +130,7 @@
                                 <div class="details-row details-field-header">
                                     <span>Tarvike</span>
                                     <span>Määrä</span>
-                                    <span>Kerroin</span>
+                                    <span>Alennus %</span>
                                     <span></span>
                                 </div>
                                 <div id="accessoryRows"></div>
@@ -124,7 +142,7 @@
                                 <div class="details-row details-field-header">
                                     <span>Työ</span>
                                     <span>Määrä</span>
-                                    <span>Kerroin</span>
+                                    <span>Alennus %</span>
                                     <span></span>
                                 </div>
                                 <div id="workRows"></div>
@@ -211,8 +229,8 @@
                 <select id="accessory-item">
                     <option value="">Valitse tarvike</option>
                 </select>
-                <input type="number" class="accessory-quantity" min="0" step="1" value="${data.maara}">
-                <input type="number" class="accessory-factor" min="0" step="0.1" value="${data.hintatekija}">
+                <input type="number" class="accessory-quantity" min="0" step="1" value="${Number(data.maara).toFixed(0)}">
+                <input type="number" class="accessory-factor" min="0" step="1" value="${data.hintatekija ? ((1 - data.hintatekija) * 100).toFixed(0) : 0}">
                 <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
             `;
 
@@ -222,7 +240,6 @@
             return row;
         } 
 
-        // TODO: estä urakka työrivin poisto
         function createWorkRow(data = { nimi: '', tyomaara_tunneilla: 0, hintatekija: 0 }) {
             const row = document.createElement('div');
             row.className = 'details-row work-row';
@@ -230,8 +247,8 @@
                 <select id="work-type">
                     <option value="">Valitse työ</option>
                 </select>
-                <input type="number" class="work-quantity" min="0" step="1" value="${data.tyomaara_tunneilla}">
-                <input type="number" class="work-factor" min="0" step="0.1" value="${data.hintatekija}">
+                <input type="number" class="work-quantity" min="0" step="1" value="${Number(data.tyomaara_tunneilla).toFixed(0)}">
+                <input type="number" class="work-factor" min="0" step="1" value="${data.hintatekija ? ((1 - data.hintatekija) * 100).toFixed(0) : 0}">
                 <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
             `;
             
@@ -286,13 +303,13 @@
             
             if (selectedWork === 'Urakka') {
                 itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi === 'Urakka');
-                toggleWorkRowButton('Urakka');
+                toggleWorkRow('Urakka');
             } else if (selectedWork === '') {
                 itemsToDisplay = uniqueWorkTypes;
-                toggleWorkRowButton('toimii');   
+                toggleWorkRow('toimii');   
             } else {
                 itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi !== 'Urakka');
-                toggleWorkRowButton('toimiiko');
+                toggleWorkRow('toimiiko');
             }
 
             itemsToDisplay.forEach(workType => {
@@ -344,6 +361,7 @@
             document.getElementById('agreementInfoEdit').classList.toggle('hidden', !editMode);
             document.getElementById('agreementAccessoriesView').classList.toggle('hidden', editMode);
             document.getElementById('agreementWorkView').classList.toggle('hidden', editMode);
+            document.getElementById('agreementUrakkaWorkView').classList.toggle('hidden', editMode);
             document.getElementById('accessoryPanel').classList.toggle('hidden', !editMode);
             document.getElementById('workPanel').classList.toggle('hidden', !editMode);
             document.getElementById('editPanelWrapper').classList.toggle('hidden', !editMode);
@@ -351,14 +369,20 @@
             document.getElementById('saveAgreementBtn').style.display = editMode ? 'inline-flex' : 'none';
         }
 
-        // Poistaa mahdollisuuden lisätä työrivejä jos työtyyppi on urakka.
-        function toggleWorkRowButton(selectedWork) {
+        // Poistaa mahdollisuuden lisätä työrivejä jos työtyyppi on urakka ja muokkaa otsikoita.
+        function toggleWorkRow(selectedWork) {
             const addBtn = document.getElementById('addWorkRowBtn');
-            
+            const urakkaWorkView = document.getElementById('agreementUrakkaWorkView');
+            const workView = document.getElementById('agreementWorkView');
+
             if (selectedWork === 'Urakka') {
-                addBtn.style.display = 'none';
+                if (editMode) addBtn.style.display = 'none';
+                workView.style.display = 'none';
+                urakkaWorkView.style.display = 'block';
             } else {
-                addBtn.style.display = 'block';
+                if (editMode) addBtn.style.display = 'block';
+                workView.style.display = 'block';
+                urakkaWorkView.style.display = 'none';
             }
         }
 
@@ -420,37 +444,65 @@
             document.getElementById('viewLocation').textContent = agreement.kohde_nimi;
             document.getElementById('viewCustomer').textContent = agreement.asiakas_nimi;
             document.getElementById('viewAmount').textContent = formatCurrency(agreement.kokonaishinta);
+            document.getElementById('viewAmountALV').textContent = formatCurrency(agreement.alv) 
+                                                                                  + ' -> Yhteensä: '
+                                                                                  + formatCurrency(
+                                                                                    Number(agreement.kokonaishinta) 
+                                                                                    + Number(agreement.alv));
             document.getElementById('viewBilled').textContent = Number(agreement.laskutettu) ? 'Kyllä' : 'Ei';
 
             const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id);
             const agreementWork = work.filter(w => w.sopimus_id == agreement.sopimus_id);
 
             // TODO: arvojen alignaus ja ehkä tarvikkeen kokonaishinta kertoimen jälkeen
-            //TÄHÄN OIKEAT YKSIKOT
             renderViewList('viewAccessoriesList', agreementAccessories, item => `
                 <span>${item.nimi}</span>
-                <span>${Number(item.maara).toFixed(0)} kpl</span>
-                <span>x ${item.hintatekija}</span>
-                <span></span>
+                <span>${Number(item.maara).toFixed(0)} ${item.yksikko}${item.yksikko === 'metri' ? 'ä' : ''}</span>
+                <span>${
+                    item.hintatekija == 1
+                        ? 'Ei alennusta'
+                        : item.hintatekija !== undefined && item.hintatekija !== null
+                            ? ((1 - item.hintatekija) * 100).toFixed(0) + ' %'
+                            : ''
+                }</span>
+                <span>${formatCurrency(item.myyntihinta)}</span>
+                <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara))}</span>
+                <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara) * 0.24)}</span>
+                <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara) * 1.24)}</span>
             `);
-            renderViewList('viewWorkList', agreementWork, item => {
-                let amount = item.nimi;
-                let unit = '';
-
-                if (amount === 'Urakka') {
-                    amount = 1;
-                } else {
-                    amount = (item.tyomaara_tunneilla || 0);
+            if (agreement.tyyppi !== 'Urakka') {
+                renderViewList('viewWorkList',  agreementWork, item => {
+                    toggleWorkRow(item.nimi);
+                    let unit = '';
+                    let amount = (item.tyomaara_tunneilla || 0);
                     unit = ' h';
-                }
 
-                return`
-                    <span>${item.nimi}</span>
-                    <span>${Number(amount).toFixed(0)}${unit}</span>
-                    <span>x ${item.hintatekija}</span>
-                    <span></span>
-                `;
-            });
+                    return`
+                        <span>${item.nimi}</span>
+                        <span>${Number(amount).toFixed(0)}${unit}</span>
+                        <span>${
+                            item.hintatekija == 1
+                                ? 'Ei alennusta'
+                                : item.hintatekija !== undefined && item.hintatekija !== null
+                                    ? ((1 - item.hintatekija) * 100).toFixed(0) + ' %'
+                                    : ''
+                        }</span>
+                        <span>${formatCurrency(Number(item.hinta) / 1.24 * Number(amount))}</span>
+                        <span>${formatCurrency(Number(item.hinta) / 1.24 * Number(amount) * Number(item.hintatekija))}</span>
+                        <span>${formatCurrency(Number(item.hinta) / 1.24 * Number(amount) * Number(item.hintatekija) * 0.24)}</span>
+                        <span>${formatCurrency(Number(item.hinta) / 1.24 * Number(amount) * Number(item.hintatekija) * 1.24)}</span>
+                    `
+                });
+            } else {
+                renderViewList('viewUrakkaWorkList',  agreementWork, item => {
+                    toggleWorkRow(item.nimi);
+                    return`
+                        <span>${item.nimi}</span>
+                        <span>${formatCurrency(item.urakka_hinta)}</span>
+                        <span>${formatCurrency(Number(item.urakka_hinta) * 0.24)}</span>
+                        <span>${formatCurrency(Number(item.urakka_hinta) * 0.24 + Number(item.urakka_hinta))}</span>
+                `});
+            }
         }
 
         function editAgreement(id) {

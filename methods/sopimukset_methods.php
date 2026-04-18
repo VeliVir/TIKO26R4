@@ -43,7 +43,8 @@ switch ($method) {
                             t.nimi,
                             t.yksikko,
                             st.maara,
-                            st.hintatekija
+                            st.hintatekija,
+                            t.hankintahinta * 1.25 AS myyntihinta
                         FROM Sopimus_tarvike st
                         JOIN Tarvike t ON t.tarvike_id = st.tarvike_id";
 
@@ -68,7 +69,9 @@ switch ($method) {
                             ss.sopimus_id,
                             s.nimi,
                             ss.tyomaara_tunneilla,
-                            ss.hintatekija
+                            ss.hintatekija,
+                            ss.urakka_hinta,
+                            s.hinta
                         FROM Sopimus_suoritus ss
                         JOIN Suoritus s ON s.suoritus_id = ss.suoritus_id";
 
@@ -91,7 +94,9 @@ switch ($method) {
         // Sopimukset
         $tarvike_sql = getTarvikeSumSQL();
         $suoritus_sql = getSuoritusSumSQL();
+        $tarvike_alv_sql = getTarvikeSumWithAlvSQL();
 
+        // :DDD Älkää ottako mallia
         $sql_sopimukset = "
             SELECT s.sopimus_id,
                 s.kohde_id,
@@ -102,6 +107,8 @@ switch ($method) {
                 t.nimi AS kohde_nimi,
                 a.etunimi || ' ' || a.sukunimi AS asiakas_nimi,
                 (COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0)) AS kokonaishinta,
+                (COALESCE(tarvike_alv.t_summa_alv, 0)  
+                + COALESCE((suoritus_laskenta.s_summa * 0.24), 0)) AS alv,
                 CASE 
                     WHEN EXISTS (
                         SELECT 1 
@@ -117,6 +124,8 @@ switch ($method) {
                 ON tarvike_laskenta.sopimus_id = s.sopimus_id
             LEFT JOIN $suoritus_sql AS suoritus_laskenta 
                 ON suoritus_laskenta.sopimus_id = s.sopimus_id
+            LEFT JOIN $tarvike_alv_sql AS tarvike_alv 
+                ON tarvike_alv.sopimus_id = s.sopimus_id
             ORDER BY s.luotu DESC
         ";
 

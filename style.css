@@ -497,6 +497,10 @@ footer p {
     font-size: 0.95em;
 }
 
+.details-table-row span {
+    flex: 1;
+}
+
 .details-row.accessory-row,
 .details-row.work-row {
     align-items: center;

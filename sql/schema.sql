@@ -60,7 +60,7 @@ CREATE TABLE Tarvike (
     yksikko VARCHAR(50),
     hankintahinta NUMERIC(12,2),
     varastossa INT,
-    tyyppi VARCHAR(50),
+    alv NUMERIC(12,2) DEFAULT 1.24,
     luotu TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     muokattu TIMESTAMP ,
     poistettu TIMESTAMP
