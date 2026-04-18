@@ -66,38 +66,34 @@
     </div>
 
     <script>
-        const invoices = [
-            {
-                id: 1,
-                billingDate: '2026-04-01',
-                dueDate: '2026-05-01',
-                customer: 'Seppo Tärsky',
-                amount: 1290.00,
-                paid: false
-            },
-            {
-                id: 2,
-                billingDate: '2026-03-15',
-                dueDate: '2026-04-15',
-                customer: 'Laura Lehtonen',
-                amount: 720.50,
-                paid: true
-            },
-            {
-                id: 3,
-                billingDate: '2026-04-08',
-                dueDate: '2026-05-08',
-                customer: 'Matti Meikäläinen',
-                amount: 450.00,
-                paid: false
-            }
-        ];
-
+        let invoices = [];
         let activeInvoiceId = null;
         let editMode = false;
 
+        async function init() {
+            try {
+                const response = await fetch('methods/laskut_methods.php');
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('Datan haku epäonnistui');
+                    return;
+                }
+
+                invoices = data.invoices;
+
+                renderInvoiceRows();
+
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe');
+            }
+        }
+
+        init();
+
         function formatCurrency(value) {
-            return `${value.toFixed(2).replace('.', ',')} €`;
+            return `${parseFloat(value).toFixed(2).replace('.', ',')} €`;
         }
 
         function renderInvoiceRows() {
@@ -106,18 +102,18 @@
             const filter = document.querySelector('#invoiceFilter').value.toLowerCase();
 
             invoices
-                .filter(invoice => invoice.customer.toLowerCase().includes(filter))
+                .filter(invoice => invoice.asiakas_nimi.toLowerCase().includes(filter))
                 .forEach(invoice => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${invoice.billingDate}</td>
-                        <td>${invoice.dueDate}</td>
-                        <td>${invoice.customer}</td>
+                        <td>${invoice.pvm}</td>
+                        <td>${invoice.erapaiva}</td>
+                        <td>${invoice.asiakas_nimi}</td>
                         <td>${formatCurrency(invoice.amount)}</td>
                         <td>${invoice.paid ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
-                            <button class="button button--secondary" onclick="showInvoice(${invoice.id})">Näytä</button>
-                            ${invoice.paid ? '' : `<button class="button button--ghost" onclick="editInvoice(${invoice.id})">Muokkaa</button>`}
+                            <button class="button button--secondary" onclick="showInvoice(${invoice.lasku_id})">Näytä</button>
+                            ${invoice.paid ? `<button class="button button--ghost" onclick="editInvoice(${invoice.lasku_id})">Muokkaa</button>` : ''}
                         </td>
                     `;
                     tbody.appendChild(row);

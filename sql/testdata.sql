@@ -60,13 +60,13 @@ INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES
 (5, 2, 3, 1.24), 
 (5, 4, 1, 1.24);
 
-INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija) VALUES 
-(1, 1, NULL, 1.24),
-(2, 2, 3, 0.90),
-(2, 3, 12, 1),
-(3, 2, 25, 0.80),
-(3, 3, 7, 0.90),
-(3, 4, 3, 1),
-(4, 1, NULL, 1.12),
-(5, 2, 3, 1),
-(5, 3, 12, 1);
+INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija, urakka_hinta) VALUES 
+(1, 1, NULL, 1.24, 100.00),
+(2, 2, 3, 0.90, NULL),
+(2, 3, 12, 1.00, NULL),
+(3, 2, 25, 0.80, NULL),
+(3, 3, 7, 0.90, NULL),
+(3, 4, 3, 1.00, NULL),
+(4, 1, NULL, 1.12, 50.00),
+(5, 2, 3, 1.00, NULL),
+(5, 3, 12, 1.00, NULL);

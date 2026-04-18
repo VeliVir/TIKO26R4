@@ -10,7 +10,17 @@ function getTarvikeSumSQL(): string {
 
 function getSuoritusSumSQL(): string {
     return "(
-        SELECT ss.sopimus_id, SUM(ss.tyomaara_tunneilla * s.hinta * ss.hintatekija) AS s_summa
+        SELECT 
+            ss.sopimus_id,
+            SUM(
+                (
+                    CASE 
+                        WHEN ss.urakka_hinta IS NOT NULL 
+                            THEN ss.urakka_hinta
+                        ELSE ss.tyomaara_tunneilla * s.hinta
+                    END
+                ) * ss.hintatekija
+            ) AS s_summa
         FROM Sopimus_suoritus ss
         JOIN Suoritus s ON s.suoritus_id = ss.suoritus_id
         GROUP BY ss.sopimus_id

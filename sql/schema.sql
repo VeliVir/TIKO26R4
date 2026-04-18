@@ -85,6 +85,7 @@ CREATE TABLE Sopimus_suoritus (
     sopimus_id INT NOT NULL REFERENCES Sopimus(sopimus_id),
     tyomaara_tunneilla NUMERIC(12,3),
     hintatekija NUMERIC(12,2) DEFAULT 1.00,
+    urakka_hinta NUMERIC(12,2),
     PRIMARY KEY (sopimus_id, suoritus_id)
 );
 
