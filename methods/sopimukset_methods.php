@@ -39,7 +39,9 @@ switch ($method) {
         // Tarvikkeet
         $sql_tarvikeet = "SELECT 
                             st.sopimus_id,
+                            t.tarvike_id,
                             t.nimi,
+                            t.yksikko,
                             st.maara,
                             st.hintatekija
                         FROM Sopimus_tarvike st
@@ -50,6 +52,15 @@ switch ($method) {
 
         if (!$tarvikeet_data) {
             $tarvikeet_data = [];
+        }
+        
+        $sql_tarvikeTyypit = "SELECT tarvike_id, nimi FROM Tarvike";
+
+        $result_tarvikeTyypit = pg_query($yhteys, $sql_tarvikeTyypit);
+        $tarvikeTyypit_data = pg_fetch_all($result_tarvikeTyypit);
+
+        if (!$tarvikeTyypit_data) {
+            $tarvikeTyypit_data = [];
         }
 
         // Suoritukset
@@ -66,6 +77,15 @@ switch ($method) {
 
         if (!$suoritukset_data) {
             $suoritukset_data = [];
+        }
+
+        $sql_suoritusTyypit = "SELECT suoritus_id, nimi FROM Suoritus";
+
+        $result_suoritusTyypit = pg_query($yhteys, $sql_suoritusTyypit);
+        $suoritusTyypit_data = pg_fetch_all($result_suoritusTyypit);
+
+        if (!$suoritusTyypit_data) {
+            $suoritusTyypit_data = [];
         }
         
         // Sopimukset
@@ -113,7 +133,9 @@ switch ($method) {
             'locations' => $kohteet_data,
             'agreements' => $sopimukset_data,
             'accessories' => $tarvikeet_data,
-            'work' => $suoritukset_data
+            'work' => $suoritukset_data,
+            'uniqueAccessories' => $tarvikeTyypit_data,
+            'uniqueWorkTypes' => $suoritusTyypit_data
         ]);
 
         break;

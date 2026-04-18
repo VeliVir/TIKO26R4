@@ -62,8 +62,7 @@ INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES
 (3, 6, 1, (1.0 - 0.05) * 1.24),
 (4, 7, 2, 1.24),
 (5, 2, 3, 1.24), 
-(5, 4, 1, 1.24),
-(6, 4, 3, 1.24);
+(5, 4, 1, 1.24);
 
 INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija, urakka_hinta) VALUES 
 (1, 1, NULL, 1.24, 100.00),

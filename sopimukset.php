@@ -52,6 +52,8 @@
                     <h3>Sopimuksen tiedot</h3>
                     <div class="details-row"><span>Tyyppi</span><span id="viewType"></span></div>
                     <div class="details-row"><span>Osia laskussa</span><span id="viewInstallments"></span></div>
+                    <div class="details-row"><span>Luontipäivämäärä</span><span id="viewCreated"></span></div>
+                    <div class="details-row"><span>Viimeksi muokattu</span><span id="viewUpdated"></span></div>
                     <div class="details-row"><span>Työkohde</span><span id="viewLocation"></span></div>
                     <div class="details-row"><span>Asiakas</span><span id="viewCustomer"></span></div>
                     <div class="details-row"><span>Summa</span><span id="viewAmount"></span></div>
@@ -84,18 +86,23 @@
                     <div class="panel-grid">
                         <div class="panel-section" id="agreementInfoEdit">
                             <h3>Muokkaa sopimusta</h3>
-                            <div class="details-row"><label for="editCreated">Luontipäivämäärä</label><input type="date" id="editCreated"></div>
                             <div class="details-row"><label for="editType">Tyyppi</label><select id="editType">
                                 <option value="Urakka">Urakka</option>
                                 <option value="Tuntihinta">Tuntihinta</option>
                             </select></div>
                             <div class="details-row"><label for="editInstallments">Osia laskussa</label><input type="number" id="editInstallments" min="1" step="1"></div>
-                            <div class="details-row"><label for="editLocation">Työkohde</label><input type="text" id="editLocation"></div>
-                            <div class="details-row"><label for="editCustomer">Asiakas</label><input type="text" id="editCustomer"></div>
-                            <div class="details-row"><label for="editAmount">Summa</label><input type="number" id="editAmount" min="0" step="0.01"></div>
-                            <div class="details-row"><label for="editBilled">Laskutettu</label><select id="editBilled">
-                                <option value="false">Ei</option>
-                                <option value="true">Kyllä</option>
+                            <div class="details-row">
+                                <label for="editLocation">Asiakas</label>
+                                <select id="editLocation">
+                                    <option value="">Valitse Työkohde</option>
+                                </select>
+                            </div>
+                            <div class="details-row">
+                                <label for="editCustomer">Asiakas</label>
+                                <select id="editCustomer">
+                                    <option value="">Valitse asiakas</option>
+                                </select>
+                            </div>
                             </select></div>
                         </div>
 
@@ -121,7 +128,7 @@
                                     <span></span>
                                 </div>
                                 <div id="workRows"></div>
-                                <button class="button button--secondary" onclick="addWorkRow()">Lisää rivi</button>
+                                <button id="addWorkRowBtn" class="button button--secondary" onclick="addWorkRow()">Lisää rivi</button>
                             </div>
                         </div>
                     </div>
@@ -140,6 +147,9 @@
         let agreements = [];
         let customers = [];
         let locations = [];
+        let accessories = [];
+        let work = [];
+
         let activeAgreementId = null;
         let editMode = false;
 
@@ -152,6 +162,10 @@
             agreements = data.agreements;
             customers = data.customers;
             locations = data.locations;
+            accessories = data.accessories;
+            work = data.work;
+            uniqueAccessories = data.uniqueAccessories;
+            uniqueWorkTypes = data.uniqueWorkTypes;
 
             renderAgreementRows();
         }
@@ -175,7 +189,7 @@
                         <td>${agreement.luotu}</td>
                         <td>${agreement.kohde_nimi}</td>
                         <td>${agreement.asiakas_nimi}</td>
-                        <td>${formatCurrency(agreement.kokonaishinta)}</td>
+                        <td>${formatCurrency(agreement.kokonaishinta || 0)}</td>
                         <td>${Number(agreement.laskutettu) ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showAgreement(${agreement.sopimus_id})">Näytä</button>
@@ -190,37 +204,40 @@
             renderAgreementRows();
         }
 
-        function createAccessoryRow(data = { item: '', quantity: 0, factor: 0 }) {
+        function createAccessoryRow(data = { nimi: '', maara: 0, hintatekija: 0 }) {
             const row = document.createElement('div');
             row.className = 'details-row accessory-row';
             row.innerHTML = `
-                <select class="accessory-item">
-                    <option value="" disabled ${data.item === '' ? 'selected' : ''}>Valitse tarvike...</option>
-                    <option value="Ruuvimeisseli" ${data.item === 'Ruuvimeisseli' ? 'selected' : ''}>Ruuvimeisseli</option>
-                    <option value="Poranterä 10mm" ${data.item === 'Poranterä 10mm' ? 'selected' : ''}>Poranterä 10mm</option>
-                    <option value="Työkalupakki" ${data.item === 'Työkalupakki' ? 'selected' : ''}>Työkalupakki</option>
+                <select id="accessory-item">
+                    <option value="">Valitse tarvike</option>
                 </select>
-                <input type="number" class="accessory-quantity" min="0" step="1" value="${data.quantity}">
-                <input type="number" class="accessory-factor" min="0" step="0.1" value="${data.factor}">
+                <input type="number" class="accessory-quantity" min="0" step="1" value="${data.maara}">
+                <input type="number" class="accessory-factor" min="0" step="0.1" value="${data.hintatekija}">
                 <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
             `;
-            return row;
-        }
 
-        function createWorkRow(data = { type: '', quantity: 0, factor: 0 }) {
+            const select = row.querySelector('#accessory-item');
+            populateAccessoryDropdown(select, data.nimi);
+
+            return row;
+        } 
+
+        // TODO: estä urakka työrivin poisto
+        function createWorkRow(data = { nimi: '', tyomaara_tunneilla: 0, hintatekija: 0 }) {
             const row = document.createElement('div');
             row.className = 'details-row work-row';
             row.innerHTML = `
-                <select class="work-type">
-                    <option value="" disabled ${data.type === '' ? 'selected' : ''}>Valitse työ...</option>
-                    <option value="Suunnittelu" ${data.type === 'Suunnittelu' ? 'selected' : ''}>Suunnittelu</option>
-                    <option value="Työ" ${data.type === 'Työ' ? 'selected' : ''}>Työ</option>
-                    <option value="Aputyö" ${data.type === 'Aputyö' ? 'selected' : ''}>Aputyö</option>
+                <select id="work-type">
+                    <option value="">Valitse työ</option>
                 </select>
-                <input type="number" class="work-quantity" min="0" step="1" value="${data.quantity}">
-                <input type="number" class="work-factor" min="0" step="0.1" value="${data.factor}">
+                <input type="number" class="work-quantity" min="0" step="1" value="${data.tyomaara_tunneilla}">
+                <input type="number" class="work-factor" min="0" step="0.1" value="${data.hintatekija}">
                 <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
             `;
+            
+            const select = row.querySelector('#work-type')
+            populateWorkDropdown(select, data.nimi);
+
             return row;
         }
 
@@ -233,7 +250,90 @@
         }
 
         function removeRow(button) {
-            button.closest('.details-row').remove();
+            const row = button.closest('.details-row');
+            const container = row.parentElement;
+            const allRows = container.querySelectorAll('.details-row');
+
+            if (allRows.length > 1) {
+                row.remove();
+            } else {
+                const inputs = row.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.value = '';
+                });
+                
+                const select = row.querySelector('select');
+                if (select) select.selectedIndex = 0;
+            }
+        }
+
+        function populateAccessoryDropdown(select, selectedAccessory) {
+            select.innerHTML = '<option value="">Valitse tarvike</option>';
+            uniqueAccessories.forEach(accessory => {
+                const option = document.createElement('option');
+                option.value = accessory.tarvike_id;
+                option.textContent = accessory.nimi;
+                if (accessory.nimi === selectedAccessory) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        function populateWorkDropdown(select, selectedWork) {
+            select.innerHTML = '<option value="">Valitse työ</option>';
+            let itemsToDisplay;
+            
+            if (selectedWork === 'Urakka') {
+                itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi === 'Urakka');
+                toggleWorkRowButton('Urakka');
+            } else if (selectedWork === '') {
+                itemsToDisplay = uniqueWorkTypes;
+                toggleWorkRowButton('toimii');   
+            } else {
+                itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi !== 'Urakka');
+                toggleWorkRowButton('toimiiko');
+            }
+
+            itemsToDisplay.forEach(workType => {
+                const option = document.createElement('option');
+                option.value = workType.suoritus_id;
+                option.textContent = workType.nimi;
+
+                if (workType.nimi === selectedWork) {
+                    option.selected = true;
+                }
+                
+                select.appendChild(option);
+            });
+        }
+
+        function populateCustomerDropdown(selectedCustomer) {
+            const select = document.getElementById('editCustomer');
+            select.innerHTML = '<option value="">Valitse asiakas</option>';
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.asiakas_id;
+                option.textContent = customer.nimi;
+                if (customer.nimi === selectedCustomer) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        function populateLocationDropdown(selectedLocation) {
+            const select = document.getElementById('editLocation');
+            select.innerHTML = '<option value="">Valitse kohde</option>';
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location.kohde_id;
+                option.textContent = location.nimi;
+                if (location.nimi === selectedLocation) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
         }
 
         function switchToDetailsView(mode) {
@@ -249,6 +349,17 @@
             document.getElementById('editPanelWrapper').classList.toggle('hidden', !editMode);
             document.getElementById('createInvoiceBtn').classList.toggle('hidden', editMode);
             document.getElementById('saveAgreementBtn').style.display = editMode ? 'inline-flex' : 'none';
+        }
+
+        // Poistaa mahdollisuuden lisätä työrivejä jos työtyyppi on urakka.
+        function toggleWorkRowButton(selectedWork) {
+            const addBtn = document.getElementById('addWorkRowBtn');
+            
+            if (selectedWork === 'Urakka') {
+                addBtn.style.display = 'none';
+            } else {
+                addBtn.style.display = 'block';
+            }
         }
 
         function createInvoice() {
@@ -297,45 +408,67 @@
         }
 
         function showAgreement(id) {
-            const agreement = agreements.find(item => item.id === id);
+            const agreement = agreements.find(item => item.sopimus_id == id);
             if (!agreement) return;
             activeAgreementId = id;
             switchToDetailsView('view');
-            document.getElementById('detailsTitle').textContent = `Sopimus: ${agreement.customer}`;
-            document.getElementById('viewType').textContent = agreement.type;
-            document.getElementById('viewInstallments').textContent = agreement.installments;
-            document.getElementById('viewCreated').textContent = agreement.created;
-            document.getElementById('viewLocation').textContent = agreement.location;
-            document.getElementById('viewCustomer').textContent = agreement.customer;
-            document.getElementById('viewAmount').textContent = formatCurrency(agreement.amount);
-            document.getElementById('viewBilled').textContent = agreement.billed ? 'Kyllä' : 'Ei';
-            renderViewList('viewAccessoriesList', agreement.accessories, item => `
-                <span>${item.item}</span>
-                <span>${item.quantity} kpl</span>
-                <span>x ${item.factor.toFixed(1)}</span>
+            document.getElementById('detailsTitle').textContent = `Sopimus: ${agreement.asiakas_nimi}`;
+            document.getElementById('viewType').textContent = agreement.tyyppi;
+            document.getElementById('viewInstallments').textContent = agreement.osia_laskussa;
+            document.getElementById('viewCreated').textContent = new Date(agreement.luotu).toLocaleString('fi-FI');
+            document.getElementById('viewUpdated').textContent = new Date(agreement.muokattu || agreement.luotu).toLocaleString('fi-FI');
+            document.getElementById('viewLocation').textContent = agreement.kohde_nimi;
+            document.getElementById('viewCustomer').textContent = agreement.asiakas_nimi;
+            document.getElementById('viewAmount').textContent = formatCurrency(agreement.kokonaishinta);
+            document.getElementById('viewBilled').textContent = Number(agreement.laskutettu) ? 'Kyllä' : 'Ei';
+
+            const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id);
+            const agreementWork = work.filter(w => w.sopimus_id == agreement.sopimus_id);
+
+            // TODO: arvojen alignaus ja ehkä tarvikkeen kokonaishinta kertoimen jälkeen
+            //TÄHÄN OIKEAT YKSIKOT
+            renderViewList('viewAccessoriesList', agreementAccessories, item => `
+                <span>${item.nimi}</span>
+                <span>${Number(item.maara).toFixed(0)} kpl</span>
+                <span>x ${item.hintatekija}</span>
+                <span></span>
             `);
-            renderViewList('viewWorkList', agreement.work, item => `
-                <span>${item.type}</span>
-                <span>${item.quantity}</span>
-                <span>x ${item.factor.toFixed(1)}</span>
-            `);
+            renderViewList('viewWorkList', agreementWork, item => {
+                let amount = item.nimi;
+                let unit = '';
+
+                if (amount === 'Urakka') {
+                    amount = 1;
+                } else {
+                    amount = (item.tyomaara_tunneilla || 0);
+                    unit = ' h';
+                }
+
+                return`
+                    <span>${item.nimi}</span>
+                    <span>${Number(amount).toFixed(0)}${unit}</span>
+                    <span>x ${item.hintatekija}</span>
+                    <span></span>
+                `;
+            });
         }
 
         function editAgreement(id) {
-            const agreement = agreements.find(item => item.id === id);
+            const agreement = agreements.find(item => item.sopimus_id == id);
             if (!agreement || agreement.billed) return;
             activeAgreementId = id;
             switchToDetailsView('edit');
-            document.getElementById('detailsTitle').textContent = `Muokkaa sopimusta: ${agreement.customer}`;
-            document.getElementById('editType').value = agreement.type;
-            document.getElementById('editInstallments').value = agreement.installments;
-            document.getElementById('editCreated').value = agreement.created;
-            document.getElementById('editLocation').value = agreement.location;
-            document.getElementById('editCustomer').value = agreement.customer;
-            document.getElementById('editAmount').value = agreement.amount;
-            document.getElementById('editBilled').value = agreement.billed.toString();
-            populateAccessoryRows(agreement.accessories);
-            populateWorkRows(agreement.work);
+            document.getElementById('detailsTitle').textContent = `Muokkaa sopimusta: ${agreement.asiakas_nimi}`;
+            document.getElementById('editType').value = agreement.tyyppi;
+            document.getElementById('editInstallments').value = agreement.osia_laskussa;
+
+            const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id) || [];
+            const agreementWork = work.filter(w => w.sopimus_id == agreement.sopimus_id) || [];
+            
+            populateAccessoryRows(agreementAccessories);
+            populateWorkRows(agreementWork);
+            populateCustomerDropdown(agreement.asiakas_nimi);
+            populateLocationDropdown(agreement.kohde_nimi);
         }
 
         function addAgreement() {
@@ -348,27 +481,27 @@
             document.getElementById('editLocation').value = '';
             document.getElementById('editCustomer').value = '';
             document.getElementById('editAmount').value = '';
-            document.getElementById('editBilled').value = 'false';
             populateAccessoryRows([]);
             populateWorkRows([]);
         }
 
         function collectAccessoryRows() {
             return Array.from(document.querySelectorAll('#accessoryRows .details-row')).map(row => ({
-                item: row.querySelector('.accessory-item').value,
-                quantity: parseInt(row.querySelector('.accessory-quantity').value, 10) || 0,
-                factor: parseFloat(row.querySelector('.accessory-factor').value) || 1.0
+                nimi: row.querySelector('.accessory-item').value,
+                maara: parseInt(row.querySelector('.accessory-quantity').value, 10) || 0,
+                hintatekija: parseFloat(row.querySelector('.accessory-factor').value) || 1.0
             }));
         }
 
         function collectWorkRows() {
             return Array.from(document.querySelectorAll('#workRows .details-row')).map(row => ({
-                type: row.querySelector('.work-type').value,
-                quantity: parseInt(row.querySelector('.work-quantity').value, 10) || 0,
-                factor: parseFloat(row.querySelector('.work-factor').value) || 1.0
+                nimi: row.querySelector('.work-type').value,
+                tyomaara_tunneilla: parseInt(row.querySelector('.work-quantity').value, 10) || 0,
+                hintatekija: parseFloat(row.querySelector('.work-factor').value) || 1.0
             }));
         }
 
+        // TODO: varmista että kaikki kentät on täytetty ennen tallennusta
         function saveAgreement() {
             const type = document.getElementById('editType').value;
             const installments = parseInt(document.getElementById('editInstallments').value, 10);
