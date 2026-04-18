@@ -128,10 +128,10 @@
                             <div class="panel-section" id="accessoryPanel">
                                 <h3>Käytetyt tarvikkeet</h3>
                                 <div class="details-row details-field-header">
+                                    <span></span>
                                     <span>Tarvike</span>
                                     <span>Määrä</span>
                                     <span>Alennus %</span>
-                                    <span></span>
                                 </div>
                                 <div id="accessoryRows"></div>
                                 <button class="button button--secondary" onclick="addAccessoryRow()">Lisää rivi</button>
@@ -140,10 +140,10 @@
                             <div class="panel-section" id="workPanel">
                                 <h3>Työsuoritus</h3>
                                 <div class="details-row details-field-header">
+                                    <span></span>
                                     <span>Työ</span>
                                     <span>Määrä</span>
                                     <span>Alennus %</span>
-                                    <span></span>
                                 </div>
                                 <div id="workRows"></div>
                                 <button id="addWorkRowBtn" class="button button--secondary" onclick="addWorkRow()">Lisää rivi</button>
