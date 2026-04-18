@@ -94,7 +94,7 @@ switch ($method) {
         // Sopimukset
         $tarvike_sql = getTarvikeSumSQL();
         $suoritus_sql = getSuoritusSumSQL();
-        $tarvike_alv_sql = getTarvikeSumWithAlvSQL();
+        $tarvike_alv_sql = getTarvikeALVSumSQL();
 
         // :DDD Älkää ottako mallia
         $sql_sopimukset = "

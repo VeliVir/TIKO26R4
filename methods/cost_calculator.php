@@ -40,7 +40,7 @@ function getSuoritusSumSQL(): string {
     )";
 }
 
-function getTarvikeSumWithAlvSQL(): string {
+function getTarvikeALVSumSQL(): string {
     return "(
         SELECT 
             st.sopimus_id, 
