@@ -26,4 +26,5 @@ function getSuoritusSumSQL(): string {
         GROUP BY ss.sopimus_id
     )";
 }
+
 ?>

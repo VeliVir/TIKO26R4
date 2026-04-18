@@ -457,6 +457,21 @@ footer p {
     padding: 20px;
 }
 
+#invoiceContainer {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+#invoiceContainer .details-card {
+    margin-bottom: 20px;
+}
+
+#invoiceContainer .details-card:last-child {
+    margin-bottom: 0;
+}
+
 .details-card.full-width {
     grid-column: 1 / -1;
 }
@@ -557,6 +572,26 @@ footer p {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.details-row.total-row {
+    background: #f8f9ff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    border: 2px solid #667eea;
+    font-size: 1.1em;
+}
+
+.details-row.total-row > span:first-child {
+    font-weight: 700;
+    color: #667eea;
+}
+
+.details-row.total-row > span:last-child {
+    font-weight: 700;
+    color: #333;
+    text-align: right;
 }
 
 .details-actions {
