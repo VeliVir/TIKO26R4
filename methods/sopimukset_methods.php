@@ -35,6 +35,38 @@ switch ($method) {
         if (!$kohteet_data) {
             $kohteet_data = [];
         }
+
+        // Tarvikkeet
+        $sql_tarvikeet = "SELECT 
+                            st.sopimus_id,
+                            t.nimi,
+                            st.maara,
+                            st.hintatekija
+                        FROM Sopimus_tarvike st
+                        JOIN Tarvike t ON t.tarvike_id = st.tarvike_id";
+
+        $result_tarvikeet = pg_query($yhteys, $sql_tarvikeet);
+        $tarvikeet_data = pg_fetch_all($result_tarvikeet);
+
+        if (!$tarvikeet_data) {
+            $tarvikeet_data = [];
+        }
+
+        // Suoritukset
+        $sql_suoritukset = "SELECT 
+                            ss.sopimus_id,
+                            s.nimi,
+                            ss.tyomaara_tunneilla,
+                            ss.hintatekija
+                        FROM Sopimus_suoritus ss
+                        JOIN Suoritus s ON s.suoritus_id = ss.suoritus_id";
+
+        $result_suoritukset = pg_query($yhteys, $sql_suoritukset);
+        $suoritukset_data = pg_fetch_all($result_suoritukset);
+
+        if (!$suoritukset_data) {
+            $suoritukset_data = [];
+        }
         
         // Sopimukset
         $tarvike_sql = getTarvikeSumSQL();
@@ -46,10 +78,10 @@ switch ($method) {
                 s.tyyppi,
                 s.osia_laskussa,
                 DATE(s.luotu) AS luotu,
-                s.muokattu,
+                DATE(s.muokattu) AS muokattu,
                 t.nimi AS kohde_nimi,
                 a.etunimi || ' ' || a.sukunimi AS asiakas_nimi,
-                (tarvike_laskenta.t_summa + suoritus_laskenta.s_summa) AS kokonaishinta,
+                (COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0)) AS kokonaishinta,
                 CASE 
                     WHEN EXISTS (
                         SELECT 1 
@@ -79,7 +111,9 @@ switch ($method) {
             'success' => true,
             'customers' => $asiakkaat_data,
             'locations' => $kohteet_data,
-            'agreements' => $sopimukset_data
+            'agreements' => $sopimukset_data,
+            'accessories' => $tarvikeet_data,
+            'work' => $suoritukset_data
         ]);
 
         break;
