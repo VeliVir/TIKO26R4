@@ -89,3 +89,26 @@ CREATE TABLE Sopimus_suoritus (
     PRIMARY KEY (sopimus_id, suoritus_id)
 );
 
+CREATE OR REPLACE FUNCTION paivita_muokattu_sarake()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.muokattu = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER trg_paivita_muokattu_asiakas
+BEFORE UPDATE ON Asiakas
+FOR EACH ROW EXECUTE FUNCTION paivita_muokattu_sarake();
+
+CREATE TRIGGER trg_paivita_muokattu_tyokohde
+BEFORE UPDATE ON Tyokohde
+FOR EACH ROW EXECUTE FUNCTION paivita_muokattu_sarake();
+
+CREATE TRIGGER trg_paivita_muokattu_sopimus
+BEFORE UPDATE ON Sopimus
+FOR EACH ROW EXECUTE FUNCTION paivita_muokattu_sarake();
+
+CREATE TRIGGER trg_paivita_muokattu_tarvike
+BEFORE UPDATE ON Tarvike
+FOR EACH ROW EXECUTE FUNCTION paivita_muokattu_sarake();

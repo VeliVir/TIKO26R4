@@ -45,11 +45,19 @@ switch ($method) {
                 s.kohde_id,
                 s.tyyppi,
                 s.osia_laskussa,
-                s.luotu,
+                DATE(s.luotu) AS luotu,
                 s.muokattu,
                 t.nimi AS kohde_nimi,
                 a.etunimi || ' ' || a.sukunimi AS asiakas_nimi,
-                (tarvike_laskenta.t_summa + suoritus_laskenta.s_summa) AS kokonaishinta
+                (tarvike_laskenta.t_summa + suoritus_laskenta.s_summa) AS kokonaishinta,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 
+                        FROM Lasku l 
+                        WHERE l.sopimus_id = s.sopimus_id
+                    ) THEN 1
+                    ELSE 0
+                END AS laskutettu
             FROM Sopimus s
             JOIN Tyokohde t ON t.kohde_id = s.kohde_id
             JOIN Asiakas a ON a.asiakas_id = t.asiakas_id

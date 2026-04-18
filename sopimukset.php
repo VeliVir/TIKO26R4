@@ -140,6 +140,8 @@
         let agreements = [];
         let customers = [];
         let locations = [];
+        let activeAgreementId = null;
+        let editMode = false;
 
         async function init() {
             const res = await fetch('methods/sopimukset_methods.php');
@@ -155,9 +157,10 @@
         }
 
         init();
-
-        let activeAgreementId = null;
-        let editMode = false;
+        
+        function formatCurrency(value) {
+            return `${parseFloat(value).toFixed(2).replace('.', ',')} €`;
+        }
 
         function renderAgreementRows() {
             const tbody = document.querySelector('#agreementTable tbody');
@@ -172,8 +175,8 @@
                         <td>${agreement.luotu}</td>
                         <td>${agreement.kohde_nimi}</td>
                         <td>${agreement.asiakas_nimi}</td>
-                        <td>${agreement.kokonaishinta}</td>
-                        <td>-</td>
+                        <td>${formatCurrency(agreement.kokonaishinta)}</td>
+                        <td>${Number(agreement.laskutettu) ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showAgreement(${agreement.sopimus_id})">Näytä</button>
                             <button class="button button--ghost" onclick="editAgreement(${agreement.sopimus_id})">Muokkaa</button>
