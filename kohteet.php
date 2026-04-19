@@ -256,5 +256,7 @@
 
         checkUrlParameters();
     </script>
+    <script src="sort.js"></script>
+    <script>makeSortable('locationTable');</script>
 </body>
 </html>
