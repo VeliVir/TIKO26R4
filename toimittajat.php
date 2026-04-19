@@ -234,14 +234,39 @@
             }
         }
 
-        function uploadXml() {
+        async function uploadXml() {
             const fileInput = document.getElementById('xmlFile');
             if (!fileInput.files || !fileInput.files.length) {
                 alert('Valitse ensin XML-tiedosto.');
                 return;
             }
-            const fileName = fileInput.files[0].name;
-            alert(`XML-tiedosto ${fileName} valittu. Tässä on paikkamerkki-tuki lataukselle.`);
+
+            const formData = new FormData();
+            formData.append('xmlFile', fileInput.files[0]);
+            formData.append('real_method', 'XML_IMPORT');
+
+            try {
+                const response = await fetch('methods/tarvikkeet_methods.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(
+                        `XML tuotu onnistuneesti:\n` +
+                        `${result.inserted} uutta tarviketta lisätty\n` +
+                        `${result.updated} tarviketta päivitetty\n` +
+                        `${result.unchanged} tarviketta muuttumatta`
+                    );
+                    fileInput.value = '';
+                    backToMain();
+                } else {
+                    alert('XML-tuonti epäonnistui: ' + (result.error || 'Tuntematon virhe'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe palvelimeen.');
+            }
         }
     </script>
     <script src="sort.js"></script>
