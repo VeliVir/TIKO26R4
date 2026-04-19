@@ -1,29 +1,3 @@
-<?php
-require_once 'db/db_connection.php';
-
-$sql_asiakkaat = "SELECT asiakas_id, 
-                         (etunimi || ' ' || sukunimi) AS nimi,
-                         puhelinnro,
-                         sahkoposti,
-                         osoite
-                  FROM Asiakas 
-                  ORDER BY sukunimi, etunimi ASC";
-
-$result_asiakkaat = pg_query($yhteys, $sql_asiakkaat);
-$asiakkaat_data = pg_fetch_all($result_asiakkaat);
-
-if (!$asiakkaat_data) {
-    $asiakkaat_data = [];
-}
-
-$sql_kohteet = "SELECT kohde_id, asiakas_id, nimi, osoite FROM Tyokohde";
-$result_kohteet = pg_query($yhteys, $sql_kohteet);
-$kohteet_data = pg_fetch_all($result_kohteet);
-
-if (!$kohteet_data) {
-    $kohteet_data = [];
-}
-?>
 <!DOCTYPE html>
 <html lang="fi">
 <head>
@@ -34,9 +8,8 @@ if (!$kohteet_data) {
 </head>
 <body>
     <?php include 'navbar.php'; ?>
-    
+
     <div class="container">
-        <!-- Main List View -->
         <div id="mainView">
             <header class="page-header">
                 <h1>Asiakkaat</h1>
@@ -78,13 +51,16 @@ if (!$kohteet_data) {
                     <div class="details-row"><span>Nimi</span><span id="viewName"></span></div>
                     <div class="details-row"><span>Puhelin</span><span id="viewPhone"></span></div>
                     <div class="details-row"><span>Sähköposti</span><span id="viewEmail"></span></div>
+                    <div class="details-row"><span>Osoite</span><span id="viewAddress"></span></div>
                 </div>
 
                 <div class="details-card" id="customerInfoEdit">
                     <h3>Muokkaa asiakasta</h3>
-                    <div class="details-row"><label for="editName">Nimi</label><input type="text" id="editName"></div>
+                    <div class="details-row"><label for="editFirstName">Etunimi</label><input type="text" id="editFirstName"></div>
+                    <div class="details-row"><label for="editLastName">Sukunimi</label><input type="text" id="editLastName"></div>
                     <div class="details-row"><label for="editPhone">Puhelin</label><input type="text" id="editPhone"></div>
                     <div class="details-row"><label for="editEmail">Sähköposti</label><input type="email" id="editEmail"></div>
+                    <div class="details-row"><label for="editAddress">Osoite</label><input type="text" id="editAddress"></div>
                 </div>
 
                 <div class="details-card full-width">
@@ -119,6 +95,7 @@ if (!$kohteet_data) {
 
                 <div class="details-actions" id="detailsActions">
                     <button class="button button--primary" id="saveCustomerBtn" onclick="saveCustomer()">Tallenna</button>
+                    <button class="button button--ghost" onclick="backToMain()">Peruuta</button>
                 </div>
             </div>
         </div>
@@ -127,22 +104,20 @@ if (!$kohteet_data) {
     <script>
         let customers = [];
         let locations = [];
+        let activeCustomerId = null;
+        let editMode = false;
 
         async function init() {
             try {
                 const response = await fetch('methods/asiakkaat_methods.php');
                 const data = await response.json();
-
                 if (!data.success) {
-                    alert('Datan haku epäonnistui');
+                    alert('Datan haku epäonnistui: ' + (data.error || ''));
                     return;
                 }
-
                 customers = data.customers;
                 locations = data.locations;
-
                 renderCustomerRows();
-
             } catch (e) {
                 console.error(e);
                 alert('Yhteysvirhe');
@@ -151,25 +126,22 @@ if (!$kohteet_data) {
 
         init();
 
-        let activeCustomerId = null;
-        let editMode = false;
-
         function renderCustomerRows() {
             const tbody = document.querySelector('#customerTable tbody');
             tbody.innerHTML = '';
-            const filter = document.querySelector('#customerFilter').value.toLowerCase();
+            const filter = document.getElementById('customerFilter').value.toLowerCase();
 
             customers
-                .filter(customer => customer.nimi.toLowerCase().includes(filter))
-                .forEach(customer => {
+                .filter(c => c.nimi.toLowerCase().includes(filter))
+                .forEach(c => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${customer.nimi}</td>
-                        <td>${customer.puhelinnro}</td>
-                        <td>${customer.sahkoposti}</td>
+                        <td>${c.nimi}</td>
+                        <td>${c.puhelinnro || '-'}</td>
+                        <td>${c.sahkoposti || '-'}</td>
                         <td class="actions-cell">
-                            <button class="button button--secondary" onclick="showCustomer(${customer.asiakas_id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editCustomer(${customer.asiakas_id})">Muokkaa</button>
+                            <button class="button button--secondary" onclick="showCustomer(${c.asiakas_id})">Näytä</button>
+                            <button class="button button--ghost" onclick="editCustomer(${c.asiakas_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -188,7 +160,6 @@ if (!$kohteet_data) {
             document.getElementById('customerInfoEdit').classList.toggle('hidden', !editMode);
             document.getElementById('saveCustomerBtn').style.display = editMode ? 'inline-flex' : 'none';
             document.getElementById('locationActions').style.display = editMode ? 'flex' : 'none';
-            // Hide add location card when switching views
             document.getElementById('addLocationCard').classList.add('hidden');
         }
 
@@ -199,29 +170,29 @@ if (!$kohteet_data) {
         }
 
         function showCustomer(id) {
-            const customer = customers.find(item => item.asiakas_id == id);
-            if (!customer) return;
+            const c = customers.find(x => x.asiakas_id == id);
+            if (!c) return;
             activeCustomerId = id;
             switchToDetailsView('view');
-            document.getElementById('detailsTitle').textContent = `Asiakas: ${customer.nimi}`;
-            document.getElementById('viewName').textContent = customer.nimi;
-            document.getElementById('viewPhone').textContent = customer.puhelinnro;
-            document.getElementById('viewEmail').textContent = customer.sahkoposti;
-            document.getElementById('editName').value = customer.nimi;
-            document.getElementById('editPhone').value = customer.puhelinnro;
-            document.getElementById('editEmail').value = customer.sahkoposti;
+            document.getElementById('detailsTitle').textContent = `Asiakas: ${c.nimi}`;
+            document.getElementById('viewName').textContent = c.nimi;
+            document.getElementById('viewPhone').textContent = c.puhelinnro || '-';
+            document.getElementById('viewEmail').textContent = c.sahkoposti || '-';
+            document.getElementById('viewAddress').textContent = c.osoite || '-';
             renderLocations(locations);
         }
 
         function editCustomer(id) {
-            const customer = customers.find(item => item.asiakas_id == id);
-            if (!customer) return;
+            const c = customers.find(x => x.asiakas_id == id);
+            if (!c) return;
             activeCustomerId = id;
             switchToDetailsView('edit');
-            document.getElementById('detailsTitle').textContent = `Muokkaa asiakasta: ${customer.nimi}`;
-            document.getElementById('editName').value = customer.nimi;
-            document.getElementById('editPhone').value = customer.puhelinnro;
-            document.getElementById('editEmail').value = customer.sahkoposti;
+            document.getElementById('detailsTitle').textContent = `Muokkaa asiakasta: ${c.nimi}`;
+            document.getElementById('editFirstName').value = c.etunimi || '';
+            document.getElementById('editLastName').value = c.sukunimi || '';
+            document.getElementById('editPhone').value = c.puhelinnro || '';
+            document.getElementById('editEmail').value = c.sahkoposti || '';
+            document.getElementById('editAddress').value = c.osoite || '';
             renderLocations(locations);
         }
 
@@ -229,67 +200,53 @@ if (!$kohteet_data) {
             activeCustomerId = null;
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = 'Lisää uusi asiakas';
-            document.getElementById('editName').value = '';
+            document.getElementById('editFirstName').value = '';
+            document.getElementById('editLastName').value = '';
             document.getElementById('editPhone').value = '';
             document.getElementById('editEmail').value = '';
+            document.getElementById('editAddress').value = '';
             renderLocations([]);
         }
 
         async function saveCustomer() {
-            const name = document.getElementById('editName').value.trim();
+            const etunimi = document.getElementById('editFirstName').value.trim();
+            const sukunimi = document.getElementById('editLastName').value.trim();
             const phone = document.getElementById('editPhone').value.trim();
             const email = document.getElementById('editEmail').value.trim();
+            const address = document.getElementById('editAddress').value.trim();
 
-            if (!name || !phone || !email) {
-                alert('Täytä kaikki kentät ennen tallentamista.');
-                return;
-            }
-
-            const parts = name.split(' ');
-            const firstname = parts[0];
-            const lastname = parts.slice(1).join(' ');
-
-            if (!lastname) {
-                alert('Syötä sekä etu- että sukunimi.');
+            if (!etunimi || !sukunimi || !phone || !email) {
+                alert('Täytä etu- ja sukunimi, puhelin sekä sähköposti.');
                 return;
             }
 
             const payload = {
-                etunimi: firstname,
-                sukunimi: lastname,
+                etunimi,
+                sukunimi,
                 puhelinnro: phone,
-                sahkoposti: email
+                sahkoposti: email,
+                osoite: address || null
             };
 
             const method = activeCustomerId ? 'PUT' : 'POST';
-            if (activeCustomerId) {
-                payload.asiakas_id = activeCustomerId;
-            }
+            if (activeCustomerId) payload.asiakas_id = activeCustomerId;
 
             try {
                 const response = await fetch('methods/asiakkaat_methods.php', {
-                    method: 'POST', // Käytetään aina POSTia 403-virheen välttämiseksi
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ...payload,
-                        real_method: method // Kerrotaan PHP:lle oikea toiminto
-                    })
+                    body: JSON.stringify({ ...payload, real_method: method })
                 });
-
                 const result = await response.json();
-
                 if (result.success) {
                     window.location.reload();
                 } else {
-                    alert("Tallennus epäonnistui: " + (result.error || "Tuntematon virhe"));
+                    alert('Tallennus epäonnistui: ' + (result.error || 'Tuntematon virhe'));
                 }
             } catch (e) {
-                console.error("Virhe: ", e);
-                alert("Yhteysvirhe palvelimeen.");
+                console.error(e);
+                alert('Yhteysvirhe palvelimeen.');
             }
-
-            renderCustomerRows();
-            backToMain();
         }
 
         function renderLocations(allLocations) {
@@ -297,27 +254,23 @@ if (!$kohteet_data) {
             tbody.innerHTML = '';
 
             if (!allLocations || !activeCustomerId) {
-                const row = document.createElement('tr');
-                row.innerHTML = '<td colspan="3" class="empty-row">Ei sijainteja</td>';
-                tbody.appendChild(row);
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Ei sijainteja</td></tr>';
                 return;
             }
 
-            const filteredLocations = allLocations.filter(loc => loc.asiakas_id == activeCustomerId);
-            if (filteredLocations.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = '<td colspan="3" class="empty-row">Ei sijainteja</td>';
-                tbody.appendChild(row);
+            const filtered = allLocations.filter(loc => loc.asiakas_id == activeCustomerId);
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Ei sijainteja</td></tr>';
                 return;
             }
 
-            filteredLocations.forEach(location => {
+            filtered.forEach(loc => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${location.nimi}</td>
-                    <td>${location.osoite}</td>
+                    <td>${loc.nimi}</td>
+                    <td>${loc.osoite || '-'}</td>
                     <td class="actions-cell">
-                        <button class="button button--ghost" onclick="viewLocation(${location.kohde_id})">Näytä</button>
+                        <button class="button button--ghost" onclick="viewLocation(${loc.kohde_id})">Näytä</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -349,23 +302,14 @@ if (!$kohteet_data) {
                 const response = await fetch('methods/kohteet_methods.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nimi: name,
-                        osoite: address,
-                        asiakas_id: activeCustomerId,
-                    })
+                    body: JSON.stringify({ nimi: name, osoite: address, asiakas_id: activeCustomerId })
                 });
-
                 const result = await response.json();
-
                 if (result.success) {
-                    document.getElementById('addLocationCard').classList.add('hidden');
-
                     window.location.reload();
                 } else {
-                    alert('Tallennus epäonnistui: ' + result.error);
+                    alert('Tallennus epäonnistui: ' + (result.error || ''));
                 }
-
             } catch (e) {
                 console.error(e);
                 alert('Yhteysvirhe palvelimeen.');
@@ -379,7 +323,11 @@ if (!$kohteet_data) {
         function viewLocation(locationId) {
             window.location.href = `kohteet.php?location=${locationId}`;
         }
-
+    </script>
+    <script src="sort.js"></script>
+    <script>
+        makeSortable('customerTable');
+        makeSortable('locationTable');
     </script>
 </body>
 </html>

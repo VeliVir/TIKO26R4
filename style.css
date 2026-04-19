@@ -381,6 +381,29 @@ footer p {
     letter-spacing: 0.02em;
 }
 
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.sortable-header:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.sort-indicator {
+    margin-left: 6px;
+    font-size: 0.8em;
+    opacity: 0.45;
+    vertical-align: middle;
+}
+
+.sort-asc .sort-indicator,
+.sort-desc .sort-indicator {
+    opacity: 1;
+    color: #6366f1;
+}
+
 .data-table tbody tr:hover {
     background: rgba(102, 126, 234, 0.08);
 }
@@ -404,7 +427,8 @@ footer p {
 }
 
 .button:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    filter: brightness(0.93);
 }
 
 .button--primary {
@@ -414,15 +438,17 @@ footer p {
 }
 
 .button--secondary {
-    background: #ffffff;
-    color: #4f46e5;
-    border: 1px solid rgba(79, 70, 229, 0.16);
+    background: #eef0fd;
+    color: #3730a3;
+    border: 2px solid #6366f1;
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
 }
 
 .button--ghost {
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #f1f5f9;
+    color: #374151;
+    border: 2px solid #94a3b8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .details-panel {
@@ -455,6 +481,21 @@ footer p {
     background: #f8f9ff;
     border-radius: 16px;
     padding: 20px;
+}
+
+#invoiceContainer {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+#invoiceContainer .details-card {
+    margin-bottom: 20px;
+}
+
+#invoiceContainer .details-card:last-child {
+    margin-bottom: 0;
 }
 
 .details-card.full-width {
@@ -561,6 +602,26 @@ footer p {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.details-row.total-row {
+    background: #f8f9ff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    border: 2px solid #667eea;
+    font-size: 1.1em;
+}
+
+.details-row.total-row > span:first-child {
+    font-weight: 700;
+    color: #667eea;
+}
+
+.details-row.total-row > span:last-child {
+    font-weight: 700;
+    color: #333;
+    text-align: right;
 }
 
 .details-actions {

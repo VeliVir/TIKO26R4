@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tarvikkeet>
+	<toimittaja>
+		<toim_nimi>Moponet</toim_nimi>
+		<osoite>Kaarnankatu 2, Joensuu</osoite>
+	</toimittaja>
+  
+	<tarvike>
+		<ttiedot>
+			<id>696969</id>
+			<nimi>Akkulaatikko 350 x 200 x 240 mm</nimi>
+			<merkki>Akulankka</merkki>
+			<hinta>19.90</hinta>
+			<tyyppi>tarvike</tyyppi>
+			<yksikko>kpl</yksikko>
+		</ttiedot>
+	</tarvike>
+	
+	<tarvike>
+		<ttiedot>
+			<id>1337</id>
+			<nimi>Ilmalämpöpumpun yleiskaukosäädin</nimi>
+			<merkki>Sinox</merkki>
+			<hinta>15.00</hinta>
+			<tyyppi>tarvike</tyyppi>
+			<yksikko>kpl</yksikko>
+		</ttiedot>
+	</tarvike>
+	
+	<tarvike>
+		<ttiedot>
+			<id>999-61</id>
+			<nimi>Maakaapeli</nimi>
+			<merkki>Kaapelsson</merkki>
+			<hinta>4.50</hinta>
+			<tyyppi>tarvike</tyyppi>
+			<yksikko>metri</yksikko>
+		</ttiedot>
+	</tarvike>
+  
+ </tarvikkeet>
