@@ -35,21 +35,80 @@ switch ($method) {
         if (!$kohteet_data) {
             $kohteet_data = [];
         }
+
+        // Tarvikkeet
+        $sql_tarvikeet = "SELECT 
+                            st.sopimus_id,
+                            t.tarvike_id,
+                            t.nimi,
+                            t.yksikko,
+                            st.maara,
+                            st.hintatekija,
+                            t.hankintahinta * 1.25 AS myyntihinta
+                        FROM Sopimus_tarvike st
+                        JOIN Tarvike t ON t.tarvike_id = st.tarvike_id";
+
+        $result_tarvikeet = pg_query($yhteys, $sql_tarvikeet);
+        $tarvikeet_data = pg_fetch_all($result_tarvikeet);
+
+        if (!$tarvikeet_data) {
+            $tarvikeet_data = [];
+        }
+        
+        $sql_tarvikeTyypit = "SELECT tarvike_id, nimi FROM Tarvike";
+
+        $result_tarvikeTyypit = pg_query($yhteys, $sql_tarvikeTyypit);
+        $tarvikeTyypit_data = pg_fetch_all($result_tarvikeTyypit);
+
+        if (!$tarvikeTyypit_data) {
+            $tarvikeTyypit_data = [];
+        }
+
+        // Suoritukset
+        $sql_suoritukset = "SELECT 
+                            ss.sopimus_id,
+                            s.nimi,
+                            ss.tyomaara_tunneilla,
+                            ss.hintatekija,
+                            ss.urakka_hinta,
+                            s.hinta
+                        FROM Sopimus_suoritus ss
+                        JOIN Suoritus s ON s.suoritus_id = ss.suoritus_id";
+
+        $result_suoritukset = pg_query($yhteys, $sql_suoritukset);
+        $suoritukset_data = pg_fetch_all($result_suoritukset);
+
+        if (!$suoritukset_data) {
+            $suoritukset_data = [];
+        }
+
+        $sql_suoritusTyypit = "SELECT suoritus_id, nimi FROM Suoritus";
+
+        $result_suoritusTyypit = pg_query($yhteys, $sql_suoritusTyypit);
+        $suoritusTyypit_data = pg_fetch_all($result_suoritusTyypit);
+
+        if (!$suoritusTyypit_data) {
+            $suoritusTyypit_data = [];
+        }
         
         // Sopimukset
         $tarvike_sql = getTarvikeSumSQL();
         $suoritus_sql = getSuoritusSumSQL();
+        $tarvike_alv_sql = getTarvikeSumWithAlvSQL();
 
+        // :DDD Älkää ottako mallia
         $sql_sopimukset = "
             SELECT s.sopimus_id,
                 s.kohde_id,
                 s.tyyppi,
                 s.osia_laskussa,
                 DATE(s.luotu) AS luotu,
-                s.muokattu,
+                DATE(s.muokattu) AS muokattu,
                 t.nimi AS kohde_nimi,
                 a.etunimi || ' ' || a.sukunimi AS asiakas_nimi,
-                (tarvike_laskenta.t_summa + suoritus_laskenta.s_summa) AS kokonaishinta,
+                (COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0)) AS kokonaishinta,
+                (COALESCE(tarvike_alv.t_summa_alv, 0)  
+                + COALESCE((suoritus_laskenta.s_summa * 0.24), 0)) AS alv,
                 CASE 
                     WHEN EXISTS (
                         SELECT 1 
@@ -65,6 +124,8 @@ switch ($method) {
                 ON tarvike_laskenta.sopimus_id = s.sopimus_id
             LEFT JOIN $suoritus_sql AS suoritus_laskenta 
                 ON suoritus_laskenta.sopimus_id = s.sopimus_id
+            LEFT JOIN $tarvike_alv_sql AS tarvike_alv 
+                ON tarvike_alv.sopimus_id = s.sopimus_id
             ORDER BY s.luotu DESC
         ";
 
@@ -79,7 +140,11 @@ switch ($method) {
             'success' => true,
             'customers' => $asiakkaat_data,
             'locations' => $kohteet_data,
-            'agreements' => $sopimukset_data
+            'agreements' => $sopimukset_data,
+            'accessories' => $tarvikeet_data,
+            'work' => $suoritukset_data,
+            'uniqueAccessories' => $tarvikeTyypit_data,
+            'uniqueWorkTypes' => $suoritusTyypit_data
         ]);
 
         break;

@@ -7,7 +7,8 @@ INSERT INTO Toimittaja (nimi, osoite) VALUES
 INSERT INTO Asiakas (etunimi, sukunimi, osoite, puhelinnro, sahkoposti) VALUES 
 ('Jaska', 'Hosunen', 'Mesikuja 10, Susimetsä', '040 123 4567', 'jaska.hosunen@gmail.com'),
 ('Lissu', 'Jokinen', 'Nurmitie 5, Aitolahti', '050 987 6543', 'lissu.jokinen@hotmail.com'),
-('Masa', 'Näsänen', 'Masalantie 12, Kangasala', '044 321 7689', 'masa.nasanen@tuni.fi');
+('Masa', 'Näsänen', 'Masalantie 12, Kangasala', '044 321 7689', 'masa.nasanen@tuni.fi'),
+('Presidentti', 'Niinistö', 'Mariankatu 2, Helsinki', '010 123 4567', 'presidentti.niinisto@gmail.com');
 
 INSERT INTO Tyokohde (asiakas_id, nimi, osoite) VALUES 
 (1, 'Susimetsän asunto', 'Mesikuja 10, Susimetsä'),
@@ -15,16 +16,16 @@ INSERT INTO Tyokohde (asiakas_id, nimi, osoite) VALUES
 (2, 'Huitsinnevan toimisto', 'Kasinopolku 11, Huitsinneva'),
 (3, 'Puotonkorven tehdas', 'Puotonkorventie 1, Puotonkorpi'),
 (3, 'Masalantien asunto', 'Masalantie 12, Kangasala'),
-(3, 'Presidentinlinna', 'Mariankatu 2, Helsinki');
+(4, 'Presidentinlinna', 'Mariankatu 2, Helsinki');
 
-INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa) VALUES 
-(1, 'USB-kaapeli', 'Deltaco', 'kpl', 4.00, 24),
-(2, 'Sähköjohto', 'Harju', 'metri', 1.00, 28),
-(3, 'Opaskirja', 'Apustajat', 'kpl', 8.00, 18),
-(2, 'Pistorasia', 'Jussi', 'kpl', 4.00, 10),
-(2, 'Maakaapeli', 'Kaapelsson', 'metri', 4.00, 300),
-(4, 'Sähkökeskus', 'Junker', 'kpl', 300.00, 3),
-(4, 'Palohälytin', 'Incendium', 'kpl', 4.00, 15);
+INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa, alv) VALUES 
+(1, 'USB-kaapeli', 'Deltaco', 'kpl', 4.00, 24, 1.24),
+(2, 'Sähköjohto', 'Harju', 'metri', 1.00, 28, 1.24),
+(3, 'Opaskirja', 'Apustajat', 'kpl', 8.00, 18, 1.10),
+(2, 'Pistorasia', 'Jussi', 'kpl', 10.00, 10, 1.24),
+(2, 'Maakaapeli', 'Kaapelsson', 'metri', 4.00, 300, 1.24),
+(4, 'Sähkökeskus', 'Junker', 'kpl', 300.00, 3, 1.24),
+(4, 'Palohälytin', 'Incendium', 'kpl', 4.00, 15, 1.24);
 
 INSERT INTO Suoritus (nimi, hinta) VALUES 
 ('Urakka', NULL),
@@ -54,25 +55,24 @@ INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VA
 (5, NULL, '2026-03-01', '2026-03-15', NULL);
 
 INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES 
-(1, 1, 1, 1.24),
-(2, 2, 3, (1.0 - 0.10) * 1.24),
-(2, 3, 1, 1.10),
-(2, 4, 1, (1.0 - 0.20) * 1.24),
-(3, 5, 100, (1.0 - 0.10) * 1.24),
-(3, 6, 1, (1.0 - 0.05) * 1.24),
-(4, 7, 2, 1.24),
-(5, 2, 3, 1.24), 
-(5, 4, 1, 1.24),
-(6, 4, 3, 1.24);
+(1, 1, 1, 1.00),
+(2, 2, 3, 0.90),
+(2, 3, 1, 1.00),
+(2, 4, 1, 0.80),
+(3, 5, 100, 0.90),
+(3, 6, 1, 0.95),
+(4, 7, 2, 1.00),
+(5, 2, 3, 1.00), 
+(5, 4, 1, 1.00);
 
 INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija, urakka_hinta) VALUES 
-(1, 1, NULL, 1.24, 100.00),
+(1, 1, NULL, 1.00, 100.00),
 (2, 2, 3, 0.90, NULL),
 (2, 3, 12, 1.00, NULL),
 (3, 2, 25, 0.80, NULL),
 (3, 3, 7, 0.90, NULL),
 (3, 4, 3, 1.00, NULL),
-(4, 1, NULL, 1.12, 50.00),
+(4, 1, NULL, 1.00, 50.00),
 (5, 2, 3, 1.00, NULL),
 (5, 3, 12, 1.00, NULL),
-(6, 1, NULL, 1.12, 5004.21);
+(6, 1, NULL, 1.00, 5004.21);
