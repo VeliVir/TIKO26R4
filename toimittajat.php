@@ -8,28 +8,232 @@
 </head>
 <body>
     <?php include 'navbar.php'; ?>
-    
-    <div class="container">
-        <header class="page-header">
-            <h1>Toimittajat</h1>
-        </header>
 
-        <div class="table-container" style="padding: 30px; max-width: 640px; margin: 0 auto;">
-            <div class="details-card">
-                <h3>XML-tuonti</h3>
-                <div class="details-row">
-                    <label for="xmlFile">Valitse XML-tiedosto</label>
-                    <input type="file" id="xmlFile" accept=".xml">
+    <div class="container">
+
+        <!-- Main view: table -->
+        <div id="mainView">
+            <header class="page-header">
+                <h1>Toimittajat</h1>
+            </header>
+
+            <div class="top-actions">
+                <button class="button button--primary" onclick="addSupplier()">Lisää uusi toimittaja</button>
+                <button class="button button--secondary" onclick="showXmlView()">Lisää tarvikkeita</button>
+                <div class="filter-field">
+                    <label for="supplierFilter">Suodata</label>
+                    <input type="text" id="supplierFilter" placeholder="Etsi toimittajan nimellä" oninput="filterSuppliers()">
                 </div>
-                <div class="details-row">
-                    <span></span>
-                    <button class="button button--primary" onclick="uploadXml()">Lataa XML</button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="supplierTable">
+                    <thead>
+                        <tr>
+                            <th>Nimi</th>
+                            <th>Osoite</th>
+                            <th>Tarvikkeita</th>
+                            <th>Toiminnot</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Details view: show / edit supplier -->
+        <div id="detailsView" class="hidden">
+            <div class="details-view-header">
+                <button class="button button--ghost back-button" onclick="backToMain()">← Takaisin</button>
+                <h1 id="detailsTitle">Toimittaja</h1>
+            </div>
+
+            <div class="details-content">
+                <div class="details-card" id="supplierInfoView">
+                    <h3>Tiedot</h3>
+                    <div class="details-row"><span>Nimi</span><span id="viewName"></span></div>
+                    <div class="details-row"><span>Osoite</span><span id="viewAddress"></span></div>
+                    <div class="details-row"><span>Tarvikkeita</span><span id="viewCount"></span></div>
+                </div>
+
+                <div class="details-card" id="supplierInfoEdit">
+                    <h3>Muokkaa toimittajaa</h3>
+                    <div class="details-row">
+                        <label for="editName">Nimi</label>
+                        <input type="text" id="editName">
+                    </div>
+                    <div class="details-row">
+                        <label for="editAddress">Osoite</label>
+                        <input type="text" id="editAddress">
+                    </div>
+                </div>
+
+                <div class="details-actions">
+                    <button class="button button--primary" id="saveSupplierBtn" onclick="saveSupplier()" style="display: none;">Tallenna</button>
+                    <button class="button button--ghost" onclick="backToMain()">Peruuta</button>
                 </div>
             </div>
         </div>
+
+        <!-- XML upload view -->
+        <div id="xmlView" class="hidden">
+            <div class="details-view-header">
+                <button class="button button--ghost back-button" onclick="backToMain()">← Takaisin</button>
+                <h1>Lisää tarvikkeita</h1>
+            </div>
+
+            <div class="details-content">
+                <div class="details-card">
+                    <h3>XML-tuonti</h3>
+                    <div class="details-row">
+                        <label for="xmlFile">Valitse XML-tiedosto</label>
+                        <input type="file" id="xmlFile" accept=".xml">
+                    </div>
+                    <div class="details-row">
+                        <span></span>
+                        <button class="button button--primary" onclick="uploadXml()">Lataa XML</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
+        let suppliers = [];
+        let activeSupplierId = null;
+        let editMode = false;
+
+        async function init() {
+            try {
+                const response = await fetch('methods/toimittajat_methods.php');
+                const data = await response.json();
+                if (!data.success) {
+                    alert('Datan haku epäonnistui');
+                    return;
+                }
+                suppliers = data.suppliers;
+                renderSupplierRows();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        init();
+
+        function renderSupplierRows() {
+            const tbody = document.querySelector('#supplierTable tbody');
+            tbody.innerHTML = '';
+            const filter = document.getElementById('supplierFilter').value.toLowerCase();
+
+            suppliers
+                .filter(s => (s.nimi || '').toLowerCase().includes(filter))
+                .forEach(s => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${s.nimi || '-'}</td>
+                        <td>${s.osoite || '-'}</td>
+                        <td>${s.tarvike_maara}</td>
+                        <td class="actions-cell">
+                            <button class="button button--secondary" onclick="showSupplier(${s.toimittaja_id})">Näytä</button>
+                            <button class="button button--ghost" onclick="editSupplier(${s.toimittaja_id})">Muokkaa</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+        }
+
+        function filterSuppliers() {
+            renderSupplierRows();
+        }
+
+        function switchToDetailsView(mode) {
+            document.getElementById('mainView').classList.add('hidden');
+            document.getElementById('xmlView').classList.add('hidden');
+            document.getElementById('detailsView').classList.remove('hidden');
+            editMode = mode === 'edit';
+            document.getElementById('supplierInfoView').classList.toggle('hidden', editMode);
+            document.getElementById('supplierInfoEdit').classList.toggle('hidden', !editMode);
+            document.getElementById('saveSupplierBtn').style.display = editMode ? 'inline-flex' : 'none';
+        }
+
+        function backToMain() {
+            document.getElementById('detailsView').classList.add('hidden');
+            document.getElementById('xmlView').classList.add('hidden');
+            document.getElementById('mainView').classList.remove('hidden');
+            activeSupplierId = null;
+        }
+
+        function showXmlView() {
+            document.getElementById('mainView').classList.add('hidden');
+            document.getElementById('detailsView').classList.add('hidden');
+            document.getElementById('xmlView').classList.remove('hidden');
+        }
+
+        function showSupplier(id) {
+            const s = suppliers.find(x => Number(x.toimittaja_id) === Number(id));
+            if (!s) return;
+            activeSupplierId = id;
+            switchToDetailsView('view');
+            document.getElementById('detailsTitle').textContent = `Toimittaja: ${s.nimi}`;
+            document.getElementById('viewName').textContent = s.nimi || '-';
+            document.getElementById('viewAddress').textContent = s.osoite || '-';
+            document.getElementById('viewCount').textContent = s.tarvike_maara;
+        }
+
+        function editSupplier(id) {
+            const s = suppliers.find(x => Number(x.toimittaja_id) === Number(id));
+            if (!s) return;
+            activeSupplierId = id;
+            switchToDetailsView('edit');
+            document.getElementById('detailsTitle').textContent = `Muokkaa toimittajaa: ${s.nimi}`;
+            document.getElementById('editName').value = s.nimi || '';
+            document.getElementById('editAddress').value = s.osoite || '';
+        }
+
+        function addSupplier() {
+            activeSupplierId = null;
+            switchToDetailsView('edit');
+            document.getElementById('detailsTitle').textContent = 'Lisää uusi toimittaja';
+            document.getElementById('editName').value = '';
+            document.getElementById('editAddress').value = '';
+        }
+
+        async function postSupplier(payload, method) {
+            const response = await fetch('methods/toimittajat_methods.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...payload, real_method: method })
+            });
+            return await response.json();
+        }
+
+        async function saveSupplier() {
+            const nimi = document.getElementById('editName').value.trim();
+            const osoite = document.getElementById('editAddress').value.trim();
+
+            if (!nimi) {
+                alert('Nimi on pakollinen.');
+                return;
+            }
+
+            const payload = { nimi, osoite: osoite || null };
+            const method = activeSupplierId ? 'PUT' : 'POST';
+            if (activeSupplierId) payload.toimittaja_id = activeSupplierId;
+
+            try {
+                const result = await postSupplier(payload, method);
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Tallennus epäonnistui.');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         function uploadXml() {
             const fileInput = document.getElementById('xmlFile');
             if (!fileInput.files || !fileInput.files.length) {
@@ -40,5 +244,7 @@
             alert(`XML-tiedosto ${fileName} valittu. Tässä on paikkamerkki-tuki lataukselle.`);
         }
     </script>
+    <script src="sort.js"></script>
+    <script>makeSortable('supplierTable');</script>
 </body>
 </html>

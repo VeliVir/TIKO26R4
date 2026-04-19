@@ -194,6 +194,12 @@
             return `${parseFloat(value).toFixed(2).replace('.', ',')} €`;
         }
 
+        function toFinnishDate(isoDate) {
+            if (!isoDate) return '-';
+            const [y, m, d] = isoDate.split('T')[0].split('-');
+            return `${parseInt(d)}.${parseInt(m)}.${y}`;
+        }
+
         function renderAgreementRows() {
             const tbody = document.querySelector('#agreementTable tbody');
             tbody.innerHTML = '';
@@ -204,7 +210,7 @@
                 .forEach(agreement => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${agreement.luotu}</td>
+                        <td>${toFinnishDate(agreement.luotu)}</td>
                         <td>${agreement.kohde_nimi}</td>
                         <td>${agreement.asiakas_nimi}</td>
                         <td>${formatCurrency(agreement.kokonaishinta || 0)}</td>
@@ -600,5 +606,7 @@
         }
 
     </script>
+    <script src="sort.js"></script>
+    <script>makeSortable('agreementTable');</script>
 </body>
 </html>

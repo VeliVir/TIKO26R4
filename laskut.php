@@ -183,6 +183,12 @@
             return `${parseFloat(value).toFixed(2).replace('.', ',')} €`;
         }
 
+        function toFinnishDate(isoDate) {
+            if (!isoDate) return '-';
+            const [y, m, d] = isoDate.split('T')[0].split('-');
+            return `${parseInt(d)}.${parseInt(m)}.${y}`;
+        }
+
         function renderInvoiceRows() {
             const tbody = document.querySelector('#invoiceTable tbody');
             tbody.innerHTML = '';
@@ -193,8 +199,8 @@
                 .forEach(invoice => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${invoice.pvm}</td>
-                        <td>${invoice.erapaiva}</td>
+                        <td>${toFinnishDate(invoice.pvm)}</td>
+                        <td>${toFinnishDate(invoice.erapaiva)}</td>
                         <td>${invoice.asiakas_nimi}</td>
                         <td>${formatCurrency(invoice.pricing.total)}</td>
                         <td>${invoice.paid ? 'Kyllä' : 'Ei'}</td>
@@ -239,8 +245,8 @@
             document.getElementById('viewCustomer').textContent = invoice.asiakas_nimi;
             document.getElementById('viewAddress').textContent = invoice.asiakas_osoite || '-';
             document.getElementById('viewPaid').textContent = invoice.paid ? 'Kyllä' : 'Ei';
-            document.getElementById('viewBillingDate').textContent = invoice.pvm;
-            document.getElementById('viewDueDate').textContent = invoice.erapaiva;
+            document.getElementById('viewBillingDate').textContent = toFinnishDate(invoice.pvm);
+            document.getElementById('viewDueDate').textContent = toFinnishDate(invoice.erapaiva);
             
             // Laskun tiedot card
             document.getElementById('viewInvoiceNumber').textContent = invoice.invoice_number;
@@ -343,7 +349,7 @@
             invoices.forEach(inv => {
                 const option = document.createElement('option');
                 option.value = inv.lasku_id;
-                option.textContent = `${inv.pvm} - ${inv.asiakas_nimi}`;
+                option.textContent = `${toFinnishDate(inv.pvm)} - ${inv.asiakas_nimi}`;
                 if (Number(inv.lasku_id) === Number(selectedId)) {
                     option.selected = true;
                 }
@@ -438,5 +444,7 @@
             }, 5000);
         }
     </script>
+    <script src="sort.js"></script>
+    <script>makeSortable('invoiceTable');</script>
 </body>
 </html>
