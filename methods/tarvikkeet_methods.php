@@ -35,7 +35,8 @@ switch ($method) {
             $row['hankintahinta'] = floatval($row['hankintahinta']);
             $alv_multiplier = floatval($row['alv']);
             $row['alv_prosentti'] = (int)round(($alv_multiplier - 1) * 100);
-            $row['kokonaishinta'] = $row['hankintahinta'] * $alv_multiplier;
+            $row['myyntihinta'] = $row['hankintahinta'] * 1.25;
+            $row['kokonaishinta'] = $row['myyntihinta'] * $alv_multiplier;
             $row['varastossa'] = (int)$row['varastossa'];
         }
         unset($row);

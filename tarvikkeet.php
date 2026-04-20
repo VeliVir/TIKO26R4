@@ -58,6 +58,7 @@
                     <div class="details-row"><span>Varastossa</span><span id="viewStock"></span></div>
                     <div class="details-row"><span>ALV</span><span id="viewVat"></span></div>
                     <div class="details-row"><span>Hankintahinta</span><span id="viewPurchasePrice"></span></div>
+                    <div class="details-row"><span>Myyntihinta</span><span id="viewSellingPrice"></span></div>
                     <div class="details-row"><span>ALV-osuus</span><span id="viewVatAmount"></span></div>
                     <div class="details-row"><span>Kokonaishinta</span><span id="viewTotalPrice"></span></div>
                 </div>
@@ -207,7 +208,8 @@
             document.getElementById('viewStock').textContent = item.varastossa;
             document.getElementById('viewVat').textContent = `${item.alv_prosentti}%`;
             document.getElementById('viewPurchasePrice').textContent = formatCurrency(item.hankintahinta);
-            const vatAmount = item.hankintahinta * (item.alv_prosentti / 100);
+            document.getElementById('viewSellingPrice').textContent = formatCurrency(item.myyntihinta);
+            const vatAmount = item.myyntihinta * (item.alv_prosentti / 100);
             document.getElementById('viewVatAmount').textContent = formatCurrency(vatAmount);
             document.getElementById('viewTotalPrice').textContent = formatCurrency(item.kokonaishinta);
         }
