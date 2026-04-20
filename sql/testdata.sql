@@ -19,13 +19,13 @@ INSERT INTO Tyokohde (asiakas_id, nimi, osoite) VALUES
 (4, 'Presidentinlinna', 'Mariankatu 2, Helsinki');
 
 INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa, alv) VALUES 
-(1, 'USB-kaapeli', 'Deltaco', 'kpl', 4.00, 24, 1.24),
-(2, 'Sähköjohto', 'Harju', 'metri', 1.00, 28, 1.24),
+(1, 'USB-kaapeli', 'Deltaco', 'kpl', 4.00, 24, DEFAULT),
+(2, 'Sähköjohto', 'Harju', 'metri', 1.00, 28, DEFAULT),
 (3, 'Opaskirja', 'Apustajat', 'kpl', 8.00, 18, 1.10),
-(2, 'Pistorasia', 'Jussi', 'kpl', 10.00, 10, 1.24),
-(2, 'Maakaapeli', 'Kaapelsson', 'metri', 4.00, 300, 1.24),
-(4, 'Sähkökeskus', 'Junker', 'kpl', 300.00, 3, 1.24),
-(4, 'Palohälytin', 'Incendium', 'kpl', 4.00, 15, 1.24);
+(2, 'Pistorasia', 'Jussi', 'kpl', 10.00, 10, DEFAULT),
+(2, 'Maakaapeli', 'Kaapelsson', 'metri', 4.00, 300, DEFAULT),
+(4, 'Sähkökeskus', 'Junker', 'kpl', 300.00, 3, DEFAULT),
+(4, 'Palohälytin', 'Incendium', 'kpl', 4.00, 15, DEFAULT);
 
 INSERT INTO Suoritus (nimi, hinta) VALUES 
 ('Urakka', NULL),
