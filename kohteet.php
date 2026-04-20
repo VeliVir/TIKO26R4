@@ -69,6 +69,7 @@
 
                 <div class="details-actions" id="detailsActions">
                     <button class="button button--primary" id="saveLocationBtn" onclick="saveLocation()">Tallenna</button>
+                    <button class="button button--danger" id="deleteLocationBtn" onclick="deleteLocation()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -137,6 +138,7 @@
             document.getElementById('locationInfoView').classList.toggle('hidden', editMode);
             document.getElementById('locationInfoEdit').classList.toggle('hidden', !editMode);
             document.getElementById('saveLocationBtn').style.display = editMode ? 'inline-flex' : 'none';
+            document.getElementById('deleteLocationBtn').style.display = (editMode && activeLocationId) ? 'inline-flex' : 'none';
         }
 
         function backToMain() {
@@ -193,6 +195,28 @@
                 }
                 select.appendChild(option);
             });
+        }
+
+        async function deleteLocation() {
+            if (!activeLocationId) return;
+            const loc = locations.find(item => Number(item.kohde_id) === Number(activeLocationId));
+            if (!confirm(`Haluatko varmasti poistaa kohteen "${loc?.nimi}"? Kaikki kohteen sopimukset ja laskut poistetaan.`)) return;
+            try {
+                const response = await fetch('methods/kohteet_methods.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ kohde_id: activeLocationId, real_method: 'DELETE' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Poisto epäonnistui: ' + (result.error || ''));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe palvelimeen.');
+            }
         }
 
         async function saveLocation() {

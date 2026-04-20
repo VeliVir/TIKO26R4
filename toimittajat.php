@@ -71,7 +71,7 @@
 
                 <div class="details-actions">
                     <button class="button button--primary" id="saveSupplierBtn" onclick="saveSupplier()" style="display: none;">Tallenna</button>
-                    <button class="button button--ghost" onclick="backToMain()">Peruuta</button>
+                    <button class="button button--danger" id="deleteSupplierBtn" onclick="deleteSupplier()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -156,6 +156,7 @@
             document.getElementById('supplierInfoView').classList.toggle('hidden', editMode);
             document.getElementById('supplierInfoEdit').classList.toggle('hidden', !editMode);
             document.getElementById('saveSupplierBtn').style.display = editMode ? 'inline-flex' : 'none';
+            document.getElementById('deleteSupplierBtn').style.display = (editMode && activeSupplierId) ? 'inline-flex' : 'none';
         }
 
         function backToMain() {
@@ -207,6 +208,22 @@
                 body: JSON.stringify({ ...payload, real_method: method })
             });
             return await response.json();
+        }
+
+        async function deleteSupplier() {
+            if (!activeSupplierId) return;
+            const s = suppliers.find(x => Number(x.toimittaja_id) === Number(activeSupplierId));
+            if (!confirm(`Haluatko varmasti poistaa toimittajan "${s?.nimi}"?`)) return;
+            try {
+                const result = await postSupplier({ toimittaja_id: activeSupplierId }, 'DELETE');
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Poisto epäonnistui: ' + (result.error || 'Toimittajalla voi olla tarvikkeita.'));
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         async function saveSupplier() {

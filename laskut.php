@@ -121,7 +121,7 @@
 
                 <div class="details-actions" id="detailsActions">
                     <button class="button button--primary" id="saveInvoiceBtn" onclick="saveInvoice()" style="display: none;">Tallenna</button>
-                    <button class="button button--ghost" onclick="backToMain()">Peruuta</button>
+                    <button class="button button--danger" id="deleteInvoiceBtn" onclick="deleteInvoice()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -224,6 +224,7 @@
             document.getElementById('invoiceInfoView').classList.toggle('hidden', editMode);
             document.getElementById('invoiceInfoEdit').classList.toggle('hidden', !editMode);
             document.getElementById('saveInvoiceBtn').style.display = editMode ? 'inline-flex' : 'none';
+            document.getElementById('deleteInvoiceBtn').style.display = (editMode && activeInvoiceId) ? 'inline-flex' : 'none';
         }
 
         function backToMain() {
@@ -364,6 +365,22 @@
                 body: JSON.stringify({ ...payload, real_method: method })
             });
             return await response.json();
+        }
+
+        async function deleteInvoice() {
+            if (!activeInvoiceId) return;
+            const invoice = invoices.find(item => Number(item.lasku_id) === Number(activeInvoiceId));
+            if (!confirm(`Haluatko varmasti poistaa laskun (${invoice?.asiakas_nimi})?`)) return;
+            try {
+                const result = await postInvoice({ lasku_id: activeInvoiceId }, 'DELETE');
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Poisto epäonnistui.');
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         async function saveInvoice() {

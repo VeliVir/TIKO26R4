@@ -189,6 +189,20 @@ switch ($method) {
         ]);
         echo json_encode(['success' => true]);
         break;
+
+    case 'DELETE':
+        $lasku_id = $data['lasku_id'];
+        pg_query($yhteys, "BEGIN");
+        pg_query_params($yhteys, "UPDATE Lasku SET edellinen_lasku_id = NULL WHERE edellinen_lasku_id = $1", [$lasku_id]);
+        $result = pg_query_params($yhteys, "DELETE FROM Lasku WHERE lasku_id = $1", [$lasku_id]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
+        break;
 }
 pg_close($yhteys);
 ?>

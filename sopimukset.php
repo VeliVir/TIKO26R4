@@ -168,7 +168,7 @@
                 <div class="details-actions" id="detailsActions">
                     <button class="button button--primary" id="createInvoiceBtn" class="hidden" onclick="createInvoice()">Luo lasku</button>
                     <button class="button button--primary" id="saveAgreementBtn" onclick="saveAgreement()" style="display: none;">Tallenna</button>
-                    <button class="button button--ghost" onclick="backToMain()">Peruuta</button>
+                    <button class="button button--danger" id="deleteAgreementBtn" onclick="deleteAgreement()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -389,6 +389,7 @@
             document.getElementById('editPanelWrapper').classList.toggle('hidden', !editMode);
             document.getElementById('createInvoiceBtn').classList.toggle('hidden', editMode);
             document.getElementById('saveAgreementBtn').style.display = editMode ? 'inline-flex' : 'none';
+            document.getElementById('deleteAgreementBtn').style.display = (editMode && activeAgreementId) ? 'inline-flex' : 'none';
         }
 
         function onLocationSelect(kohdeId) {
@@ -633,6 +634,28 @@
         }
 
         // todo asiakkaan lisääminen turhaa koska kohde on suoraan asiakkaalla.
+        async function deleteAgreement() {
+            if (!activeAgreementId) return;
+            const agreement = agreements.find(item => item.sopimus_id == activeAgreementId);
+            if (!confirm(`Haluatko varmasti poistaa sopimuksen (${agreement?.asiakas_nimi})? Kaikki sopimuksen laskut poistetaan.`)) return;
+            try {
+                const response = await fetch('methods/sopimukset_methods.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sopimus_id: activeAgreementId, real_method: 'DELETE' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Poisto epäonnistui.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe palvelimeen.');
+            }
+        }
+
         async function saveAgreement() {
             const type = document.getElementById('editType').value;
             const installments = parseInt(document.getElementById('editInstallments').value, 10);

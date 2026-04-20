@@ -77,6 +77,34 @@ switch ($method) {
         ob_clean();
         echo json_encode(['success' => (bool)$result]);
         break;
+
+    case 'DELETE':
+        $asiakas_id = $data['asiakas_id'];
+        pg_query($yhteys, "BEGIN");
+        $res = pg_query_params($yhteys,
+            "SELECT s.sopimus_id FROM Sopimus s JOIN Tyokohde t ON s.kohde_id = t.kohde_id WHERE t.asiakas_id = $1",
+            [$asiakas_id]);
+        $sopimukset = pg_fetch_all($res) ?: [];
+        foreach ($sopimukset as $s) {
+            $sid = $s['sopimus_id'];
+            pg_query_params($yhteys, "UPDATE Lasku SET edellinen_lasku_id = NULL WHERE edellinen_lasku_id IN (SELECT lasku_id FROM Lasku WHERE sopimus_id = $1)", [$sid]);
+            pg_query_params($yhteys, "DELETE FROM Lasku WHERE sopimus_id = $1", [$sid]);
+            pg_query_params($yhteys, "DELETE FROM Sopimus_suoritus WHERE sopimus_id = $1", [$sid]);
+            pg_query_params($yhteys, "DELETE FROM Sopimus_tarvike WHERE sopimus_id = $1", [$sid]);
+            pg_query_params($yhteys, "DELETE FROM Sopimus WHERE sopimus_id = $1", [$sid]);
+        }
+        pg_query_params($yhteys, "DELETE FROM Tyokohde WHERE asiakas_id = $1", [$asiakas_id]);
+        $result = pg_query_params($yhteys, "DELETE FROM Asiakas WHERE asiakas_id = $1", [$asiakas_id]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            ob_clean();
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
+        break;
 }
 pg_close($yhteys);
 ?>

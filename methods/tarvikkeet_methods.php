@@ -100,6 +100,14 @@ switch ($method) {
         echo json_encode(['success' => (bool)$result]);
         break;
 
+    case 'DELETE':
+        $result = pg_query_params($yhteys,
+            "UPDATE Tarvike SET poistettu = CURRENT_TIMESTAMP WHERE tarvike_id = $1",
+            [$data['tarvike_id']]);
+        ob_clean();
+        echo json_encode(['success' => (bool)$result]);
+        break;
+
     case 'XML_IMPORT':
         if (!isset($_FILES['xmlFile']) || $_FILES['xmlFile']['error'] !== UPLOAD_ERR_OK) {
             ob_clean();

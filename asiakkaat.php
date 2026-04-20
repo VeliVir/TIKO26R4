@@ -95,7 +95,7 @@
 
                 <div class="details-actions" id="detailsActions">
                     <button class="button button--primary" id="saveCustomerBtn" onclick="saveCustomer()">Tallenna</button>
-                    <button class="button button--ghost" onclick="backToMain()">Peruuta</button>
+                    <button class="button button--danger" id="deleteCustomerBtn" onclick="deleteCustomer()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -159,6 +159,7 @@
             document.getElementById('customerInfoView').classList.toggle('hidden', editMode);
             document.getElementById('customerInfoEdit').classList.toggle('hidden', !editMode);
             document.getElementById('saveCustomerBtn').style.display = editMode ? 'inline-flex' : 'none';
+            document.getElementById('deleteCustomerBtn').style.display = (editMode && activeCustomerId) ? 'inline-flex' : 'none';
             document.getElementById('locationActions').style.display = editMode ? 'flex' : 'none';
             document.getElementById('addLocationCard').classList.add('hidden');
         }
@@ -206,6 +207,28 @@
             document.getElementById('editEmail').value = '';
             document.getElementById('editAddress').value = '';
             renderLocations([]);
+        }
+
+        async function deleteCustomer() {
+            if (!activeCustomerId) return;
+            const c = customers.find(x => x.asiakas_id == activeCustomerId);
+            if (!confirm(`Haluatko varmasti poistaa asiakkaan "${c?.nimi}"? Kaikki asiakkaan kohteet, sopimukset ja laskut poistetaan.`)) return;
+            try {
+                const response = await fetch('methods/asiakkaat_methods.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ asiakas_id: activeCustomerId, real_method: 'DELETE' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Poisto epäonnistui: ' + (result.error || ''));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe palvelimeen.');
+            }
         }
 
         async function saveCustomer() {

@@ -103,7 +103,7 @@
 
                 <div class="details-actions">
                     <button class="button button--primary" id="saveAccessoryBtn" onclick="saveAccessory()">Tallenna</button>
-                    <button class="button button--ghost" onclick="backToMain()">Peruuta</button>
+                    <button class="button button--danger" id="deleteAccessoryBtn" onclick="deleteAccessory()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -172,6 +172,8 @@
             editMode = mode === 'edit';
             document.getElementById('accessoryInfoView').classList.toggle('hidden', editMode);
             document.getElementById('accessoryInfoEdit').classList.toggle('hidden', !editMode);
+            document.getElementById('saveAccessoryBtn').style.display = editMode ? 'inline-flex' : 'none';
+            document.getElementById('deleteAccessoryBtn').style.display = (editMode && activeAccessoryId) ? 'inline-flex' : 'none';
         }
 
         function backToMain() {
@@ -247,6 +249,22 @@
                 body: JSON.stringify({ ...payload, real_method: method })
             });
             return await response.json();
+        }
+
+        async function deleteAccessory() {
+            if (!activeAccessoryId) return;
+            const item = accessories.find(a => Number(a.tarvike_id) === Number(activeAccessoryId));
+            if (!confirm(`Haluatko varmasti poistaa tarvikkeen "${item?.nimi}"?`)) return;
+            try {
+                const result = await postAccessory({ tarvike_id: activeAccessoryId }, 'DELETE');
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Poisto epäonnistui.');
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         async function saveAccessory() {

@@ -48,6 +48,17 @@ switch ($method) {
         ]);
         echo json_encode(['success' => true]);
         break;
+
+    case 'DELETE':
+        $result = pg_query_params($yhteys,
+            "DELETE FROM Toimittaja WHERE toimittaja_id = $1",
+            [$data['toimittaja_id']]);
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
+        break;
 }
 pg_close($yhteys);
 ?>
