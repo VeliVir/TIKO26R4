@@ -149,39 +149,61 @@ switch ($method) {
 
         break;
 
-    /*case 'POST': // CREATE
-        $sql = "INSERT INTO Asiakas (etunimi, sukunimi, puhelinnro, sahkoposti)
-                VALUES ($1, $2, $3, $4)";
-        pg_query_params($yhteys, $sql, [
-            $data['etunimi'],
-            $data['sukunimi'],
-            $data['puhelinnro'],
-            $data['sahkoposti']
-        ]);
-        echo json_encode(['success' => true]);
+    case 'POST': // CREATE / UPDATE
+        $sopimus_id = $data['sopimus_id'] ?? null;
+        $tyyppi = $data['tyyppi'];
+        $osia_laskussa = $data['osia_laskussa'];
+        $kohde_id = $data['kohde_id'];
+
+        // Estää virheiden tapauksissa "roskadatan" tietokannassa
+        pg_query($yhteys, "BEGIN");
+
+        try {
+            if ($sopimus_id) {
+                // MUOKKAUS
+                $sql_sopimus = "UPDATE Sopimus SET tyyppi = $1, osia_laskussa = $2, kohde_id = $3 WHERE sopimus_id = $4";
+                pg_query_params($yhteys, $sql_sopimus, [$tyyppi, $osia_laskussa, $kohde_id, $sopimus_id]);
+                
+                // Tyhjennetään vanhat rivit suoritus ja tarvike liitostauluista
+                pg_query_params($yhteys, "DELETE FROM Sopimus_tarvike WHERE sopimus_id = $1", [$sopimus_id]);
+                pg_query_params($yhteys, "DELETE FROM Sopimus_suoritus WHERE sopimus_id = $1", [$sopimus_id]);
+            } else {
+                // UUSI
+                $sql_sopimus = "INSERT INTO Sopimus (tyyppi, osia_laskussa, kohde_id) VALUES ($1, $2, $3) RETURNING sopimus_id";
+                $res = pg_query_params($yhteys, $sql_sopimus, [$tyyppi, $osia_laskussa, $kohde_id]);
+                $row = pg_fetch_assoc($res);
+                $sopimus_id = $row['sopimus_id'];
+            }
+
+            if (!empty($data['tarvikkeet'])) {
+                foreach ($data['tarvikkeet'] as $t) {
+                    // Muunnetaan alennusprosentti takaisin hintatekijäksi (esim. 10% -> 0.9)
+                    $hintatekija = 1 - ($t['alennus'] / 100);
+                    $sql_t = "INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES ($1, $2, $3, $4)";
+                    pg_query_params($yhteys, $sql_t, [$sopimus_id, $t['tarvike_id'], $t['maara'], $hintatekija]);
+                }
+            }
+
+            if (!empty($data['tyot'])) {
+                foreach ($data['tyot'] as $tyo) {
+                    if ($tyyppi === 'Urakka') {
+                        $sql_w = "INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, urakka_hinta) VALUES ($1, $2, $3)";
+                        pg_query_params($yhteys, $sql_w, [$sopimus_id, $tyo['suoritus_id'], $tyo['urakka_hinta']]);
+                    } else {
+                        $hintatekija = 1 - ($tyo['alennus'] / 100);
+                        $sql_w = "INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija) VALUES ($1, $2, $3, $4)";
+                        pg_query_params($yhteys, $sql_w, [$sopimus_id, $tyo['suoritus_id'], $tyo['maara'], $hintatekija]);
+                    }
+                }
+            }
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true, 'sopimus_id' => $sopimus_id]);
+
+        } catch (Exception $e) {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
         break;
-
-    case 'PUT': // UPDATE
-        $sql = "UPDATE Asiakas
-                SET etunimi = $1,
-                    sukunimi = $2,
-                    puhelinnro = $3,
-                    sahkoposti = $4,
-                    osoite = $5,
-                    muokattu = CURRENT_TIMESTAMP
-                WHERE asiakas_id = $6";
-
-        pg_query_params($yhteys, $sql, [
-            $data['etunimi'],
-            $data['sukunimi'],
-            $data['puhelinnro'],
-            $data['sahkoposti'],
-            $data['osoite'],
-            $data['asiakas_id'],
-            $data['kohde_id']
-        ]);
-        echo json_encode(['success' => true]);
-        break; */
 }
 pg_close($yhteys);
 ?>

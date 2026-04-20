@@ -104,23 +104,21 @@
                     <div class="panel-grid">
                         <div class="panel-section" id="agreementInfoEdit">
                             <h3>Muokkaa sopimusta</h3>
-                            <div class="details-row"><label for="editType">Tyyppi</label><select id="editType">
-                                <option value="Urakka">Urakka</option>
-                                <option value="Tuntihinta">Tuntihinta</option>
-                            </select></div>
+                            <div class="details-row">
+                                <label>Työkohde</label>
+                                    <span id="editLocation"></span>
+                            </div>
+                            <div class="details-row">
+                                <label>Asiakas</label>
+                                    <span id="editCustomer"></span>
+                            </div>
+                            <div class="details-row"><label for="editType">Tyyppi</label>
+                                <select id="editType" onchange="toggleWorkRow(this.value)">
+                                    <option value="Urakka">Urakka</option>
+                                    <option value="Tuntihinta">Tuntihinta</option>
+                                </select>
+                            </div>
                             <div class="details-row"><label for="editInstallments">Osia laskussa</label><input type="number" id="editInstallments" min="1" step="1"></div>
-                            <div class="details-row">
-                                <label for="editLocation">Työkohde</label>
-                                <select id="editLocation">
-                                    <option value="">Valitse Työkohde</option>
-                                </select>
-                            </div>
-                            <div class="details-row">
-                                <label for="editCustomer">Asiakas</label>
-                                <select id="editCustomer">
-                                    <option value="">Valitse asiakas</option>
-                                </select>
-                            </div>
                             </select></div>
                         </div>
 
@@ -170,6 +168,7 @@
 
         let activeAgreementId = null;
         let editMode = false;
+        let isUrakka = true;
 
         async function init() {
             const res = await fetch('methods/sopimukset_methods.php');
@@ -246,19 +245,27 @@
             return row;
         } 
 
-        function createWorkRow(data = { nimi: '', tyomaara_tunneilla: 0, hintatekija: 0 }) {
+        function createWorkRow(data = { nimi: '', tyomaara_tunneilla: 1, hintatekija: 0 }) {
             const row = document.createElement('div');
             row.className = 'details-row work-row';
+            
             row.innerHTML = `
-                <select id="work-type">
+                <select class="work-type" style="flex: 1;">
                     <option value="">Valitse työ</option>
                 </select>
-                <input type="number" class="work-quantity" min="0" step="1" value="${Number(data.tyomaara_tunneilla).toFixed(0)}">
-                <input type="number" class="work-factor" min="0" step="1" value="${data.hintatekija ? ((1 - data.hintatekija) * 100).toFixed(0) : 0}">
+                <input type="number" class="work-quantity hourly-field" placeholder="Määrä" 
+                    style="display: ${isUrakka ? 'none' : 'block'}; flex: 1;" 
+                    value="${Number(data.tyomaara_tunneilla || 0)}">
+                <input type="number" class="work-factor hourly-field" placeholder="Alennus %" 
+                    style="display: ${isUrakka ? 'none' : 'block'}; flex: 1;" 
+                    value="${data.hintatekija ? ((1 - data.hintatekija) * 100).toFixed(0) : 0}">
+                <input type="number" class="work-price urakka-field" placeholder="Summa (ALV 0%)" 
+                    style="display: ${isUrakka ? 'block' : 'none'}; flex: 1;" 
+                    value="${data.urakka_hinta || 0}">
                 <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
             `;
             
-            const select = row.querySelector('#work-type')
+            const select = row.querySelector('.work-type')
             populateWorkDropdown(select, data.nimi);
 
             return row;
@@ -310,9 +317,6 @@
             if (selectedWork === 'Urakka') {
                 itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi === 'Urakka');
                 toggleWorkRow('Urakka');
-            } else if (selectedWork === '') {
-                itemsToDisplay = uniqueWorkTypes;
-                toggleWorkRow('toimii');   
             } else {
                 itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi !== 'Urakka');
                 toggleWorkRow('toimiiko');
@@ -460,7 +464,6 @@
             const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id);
             const agreementWork = work.filter(w => w.sopimus_id == agreement.sopimus_id);
 
-            // TODO: arvojen alignaus ja ehkä tarvikkeen kokonaishinta kertoimen jälkeen
             renderViewList('viewAccessoriesList', agreementAccessories, item => `
                 <span>${item.nimi}</span>
                 <span>${Number(item.maara).toFixed(0)} ${item.yksikko}${item.yksikko === 'metri' ? 'ä' : ''}</span>
@@ -513,92 +516,109 @@
 
         function editAgreement(id) {
             const agreement = agreements.find(item => item.sopimus_id == id);
-            if (!agreement || agreement.billed) return;
+            if (!agreement) return;
             activeAgreementId = id;
+            isUrakka = (agreement.tyyppi === 'Urakka');
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = `Muokkaa sopimusta: ${agreement.asiakas_nimi}`;
             document.getElementById('editType').value = agreement.tyyppi ?? '';
             document.getElementById('editInstallments').value = agreement.osia_laskussa ?? 1;
+            document.getElementById('editLocation').textContent = agreement.kohde_nimi;
+            document.getElementById('editCustomer').textContent = agreement.asiakas_nimi;
 
             const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id) || [];
             const agreementWork = work.filter(w => w.sopimus_id == agreement.sopimus_id) || [];
             
             populateAccessoryRows(agreementAccessories);
             populateWorkRows(agreementWork);
-            populateCustomerDropdown(agreement.asiakas_nimi);
-            populateLocationDropdown(agreement.kohde_nimi);
         }
 
         function addAgreement() {
             activeAgreementId = null;
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = 'Uusi sopimus';
-            document.getElementById('editType').value = 'Urakka';
+            document.getElementById('editType').value = 'Valitse sopimustyyli';
             document.getElementById('editInstallments').value = 0;
-            document.getElementById('editLocation').value = '';
-            document.getElementById('editCustomer').value = '';
+            populateCustomerDropdown('');
+            populateLocationDropdown('');
             populateAccessoryRows([]);
             populateWorkRows([]);
         }
 
-        function collectAccessoryRows() {
-            return Array.from(document.querySelectorAll('#accessoryRows .details-row')).map(row => ({
-                nimi: row.querySelector('.accessory-item').value,
-                maara: parseInt(row.querySelector('.accessory-quantity').value, 10) || 0,
-                hintatekija: parseFloat(row.querySelector('.accessory-factor').value) || 1.0
-            }));
-        }
-
-        function collectWorkRows() {
-            return Array.from(document.querySelectorAll('#workRows .details-row')).map(row => ({
-                nimi: row.querySelector('.work-type').value,
-                tyomaara_tunneilla: parseInt(row.querySelector('.work-quantity').value, 10) || 0,
-                hintatekija: parseFloat(row.querySelector('.work-factor').value) || 1.0
-            }));
-        }
-
-        // TODO: varmista että kaikki kentät on täytetty ennen tallennusta
-        function saveAgreement() {
+        async function saveAgreement() {
             const type = document.getElementById('editType').value;
             const installments = parseInt(document.getElementById('editInstallments').value, 10);
-            const created = document.getElementById('editCreated').value;
-            const location = document.getElementById('editLocation').value.trim();
-            const customer = document.getElementById('editCustomer').value.trim();
-            const amount = parseFloat(document.getElementById('editAmount').value);
-            const billed = document.getElementById('editBilled').value === 'true';
-            const accessories = collectAccessoryRows();
-            const work = collectWorkRows();
+            const locationId = document.getElementById('editLocation').value;
+            const customerId = document.getElementById('editCustomer').value;
 
-            if (!created || !location || !customer || isNaN(amount) || isNaN(installments) || installments < 1) {
-                alert('Täytä kaikki kentät ennen tallentamista.');
+            if (!locationId || !customerId || isNaN(installments)) {
+                alert('Täytä pakolliset kentät: Asiakas, Kohde ja Osia laskussa.');
                 return;
             }
 
-            if (activeAgreementId) {
-                const agreement = agreements.find(item => item.id === activeAgreementId);
-                if (!agreement) return;
-                agreement.type = type;
-                agreement.installments = installments;
-                agreement.created = created;
-                agreement.location = location;
-                agreement.customer = customer;
-                agreement.amount = amount;
-                agreement.billed = billed;
-                agreement.accessories = accessories;
-                agreement.work = work;
-            } else {
-                agreements.push({
-                    id: Date.now(),
-                    type,
-                    installments,
-                    created,
-                    location,
-                    customer,
-                    amount,
-                    billed,
-                    accessories,
-                    work
+            const accessoriesData = Array.from(document.querySelectorAll('#accessoryRows .accessory-row')).map(row => {
+                const select = row.querySelector('select');
+                return {
+                    tarvike_id: select.value,
+                    maara: row.querySelector('.accessory-quantity').value,
+                    alennus: row.querySelector('.accessory-factor').value 
+                };
+            }).filter(item => item.tarvike_id !== "" && item.maara > 0);
+
+            const workData = Array.from(document.querySelectorAll('#workRows .work-row')).map(row => {
+                const select = row.querySelector('.work-type');
+                const isUrakka2 = select.options[select.selectedIndex].text === 'Urakka';
+                
+                return {
+                    suoritus_id: select.value,
+                    // Jos urakka, lähetetään hinta, muuten määrät
+                    maara: isUrakka2 ? 0 : row.querySelector('.work-quantity').value,
+                    alennus: isUrakka2 ? 0 : row.querySelector('.work-factor').value,
+                    urakka_hinta: isUrakka2 ? row.querySelector('.work-price').value : 0
+                };
+            }).filter(item => {
+                if (item.suoritus_id === "") return false;
+                
+                if (item.isUrakka2) {
+                    return item.urakka_hinta > 0;
+                } else {
+                    return item.maara > 0;
+                }
+            });
+
+            const payload = {
+                sopimus_id: activeAgreementId,
+                tyyppi: type,
+                osia_laskussa: installments,
+                kohde_id: locationId,
+                asiakas_id: customerId,
+                tarvikkeet: accessoriesData,
+                tyot: workData
+            };
+
+            try {
+                const response = await fetch('methods/sopimukset_methods.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...payload
+                    })
                 });
+
+                //const result = await response.json(); 
+                const text = await response.text(); 
+                console.log("Palvelimen vastaus:", text); 
+
+                // Jatka vasta sitten:
+                const result = JSON.parse(text);
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert("Tallennus epäonnistui.");
+                }
+            } catch (e) {
+                console.error("Virhe: ", e);
+                alert("Yhteysvirhe palvelimeen.");
             }
 
             renderAgreementRows();
