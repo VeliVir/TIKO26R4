@@ -44,8 +44,8 @@ INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu, muokattu) VALUES
 (6, 'Urakka', 1, '2026-02-06', '2026-02-20');
 
 INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VALUES 
-(1, NULL, '2025-10-01', '2025-10-15', NULL),
-(1, 1, '2025-10-25', '2025-11-10', NULL),
+(1, NULL, '2025-10-01', '2025-10-15', '2025-12-01'),
+(1, 1, '2025-10-25', '2025-11-10', '2025-12-01'),
 (1, 2, '2025-11-27', '2025-12-13', '2025-12-01'),
 (2, NULL, '2026-02-01', '2026-02-15', '2026-02-15'),
 (3, NULL, '2026-02-01', '2026-02-15', NULL),

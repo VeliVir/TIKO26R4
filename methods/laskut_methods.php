@@ -176,6 +176,10 @@ switch ($method) {
         break;
 
     case 'PUT': // UPDATE
+        $maksupaiva = $data['maksupaiva'] ?: null;
+
+        pg_query($yhteys, "BEGIN");
+
         $sql = "UPDATE Lasku
                 SET sopimus_id = $1,
                     edellinen_lasku_id = $2,
@@ -184,15 +188,39 @@ switch ($method) {
                     maksupaiva = $5
                 WHERE lasku_id = $6";
 
-        pg_query_params($yhteys, $sql, [
+        $ok = pg_query_params($yhteys, $sql, [
             $data['sopimus_id'],
             $data['edellinen_lasku_id'] ?: null,
             $data['pvm'],
             $data['erapaiva'],
-            $data['maksupaiva'] ?: null,
+            $maksupaiva,
             $data['lasku_id']
         ]);
-        echo json_encode(['success' => true]);
+
+        // If this invoice is being marked as paid, propagate to all predecessors in the chain
+        if ($ok && $maksupaiva) {
+            $sql_ketju = "WITH RECURSIVE ketju AS (
+                              SELECT edellinen_lasku_id AS lasku_id
+                              FROM Lasku
+                              WHERE lasku_id = $1 AND edellinen_lasku_id IS NOT NULL
+                              UNION ALL
+                              SELECT l.edellinen_lasku_id
+                              FROM Lasku l
+                              JOIN ketju k ON l.lasku_id = k.lasku_id
+                              WHERE l.edellinen_lasku_id IS NOT NULL
+                          )
+                          UPDATE Lasku SET maksupaiva = $2
+                          WHERE lasku_id IN (SELECT lasku_id FROM ketju)";
+            $ok = pg_query_params($yhteys, $sql_ketju, [$data['lasku_id'], $maksupaiva]);
+        }
+
+        if ($ok) {
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'DELETE':
