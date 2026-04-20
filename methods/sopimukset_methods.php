@@ -44,6 +44,7 @@ switch ($method) {
                             t.yksikko,
                             st.maara,
                             st.hintatekija,
+                            t.hankintahinta,
                             t.hankintahinta * 1.25 AS myyntihinta
                         FROM Sopimus_tarvike st
                         JOIN Tarvike t ON t.tarvike_id = st.tarvike_id";

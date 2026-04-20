@@ -67,7 +67,8 @@
                         <span>Tarvike</span>
                         <span>Määrä</span>
                         <span>Alennus %</span>
-                        <span>Yksikköhinta</span>
+                        <span>Ostohinta</span>
+                        <span>Myyntihinta</span>
                         <span>Summa (Ilman ALV)</span>
                         <span>ALV</span>
                         <span>Loppuhinta</span>
@@ -553,6 +554,7 @@
                             ? ((1 - item.hintatekija) * 100).toFixed(0) + ' %'
                             : ''
                 }</span>
+                <span>${formatCurrency(item.hankintahinta)}</span>
                 <span>${formatCurrency(item.myyntihinta)}</span>
                 <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara))}</span>
                 <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara) * 0.24)}</span>
