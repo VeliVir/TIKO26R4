@@ -158,7 +158,6 @@
                                     <span></span>
                                     <span>Työ</span>
                                     <span>Määrä</span>
-                                    <span></span>
                                 </div>
                                 <div id="urakkaWorkRows"></div>
                             </div>
@@ -664,25 +663,21 @@
                 };
             }).filter(item => item.tarvike_id !== "" && item.maara > 0);
 
-            const workData = Array.from(document.querySelectorAll('#workRows .work-row')).map(row => {
+            const containerId = type === 'Urakka' ? '#urakkaWorkRows' : '#workRows';
+            const workData = Array.from(document.querySelectorAll(`${containerId} .work-row`)).map(row => {
                 const select = row.querySelector('.work-type');
                 const isUrakka2 = type === 'Urakka';
 
                 return {
                     suoritus_id: select.value,
-                    // Jos urakka, lähetetään hinta, muuten määrät
                     maara: isUrakka2 ? 0 : row.querySelector('.work-quantity').value,
                     alennus: isUrakka2 ? 0 : row.querySelector('.work-factor').value,
                     urakka_hinta: isUrakka2 ? row.querySelector('.work-price').value : 0
                 };
             }).filter(item => {
                 if (item.suoritus_id === "") return false;
-                
-                if (type === 'Urakka') {
-                    return item.urakka_hinta > 0;
-                } else {
-                    return item.maara > 0;
-                }
+                if (type === 'Urakka') return item.urakka_hinta > 0;
+                return item.maara > 0;
             });
 
             const payload = {
