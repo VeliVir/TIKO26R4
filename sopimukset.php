@@ -103,14 +103,16 @@
                 <div class="details-card full-width edit-panel-wrapper" id="editPanelWrapper">
                     <div class="panel-grid">
                         <div class="panel-section" id="agreementInfoEdit">
-                            <h3>Muokkaa sopimusta</h3>
+                            <h3 id="agreementPrompt"></h3>
                             <div class="details-row">
                                 <label>Työkohde</label>
-                                    <span id="editLocation"></span>
+                                    <span id="viewLocationEdit"></span>
+                                    <select id="editLocation" class="hidden"></select>
                             </div>
                             <div class="details-row">
                                 <label>Asiakas</label>
-                                    <span id="editCustomer"></span>
+                                    <span id="viewCustomerEdit"></span>
+                                    <select id="editCustomer" class="hidden"></select>
                             </div>
                             <div class="details-row"><label for="editType">Tyyppi</label>
                                 <select id="editType" onchange="toggleWorkRow(this.value)">
@@ -521,10 +523,15 @@
             isUrakka = (agreement.tyyppi === 'Urakka');
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = `Muokkaa sopimusta: ${agreement.asiakas_nimi}`;
+            document.getElementById('agreementPrompt').textContent = 'Muokkaa sopimusta';
             document.getElementById('editType').value = agreement.tyyppi ?? '';
             document.getElementById('editInstallments').value = agreement.osia_laskussa ?? 1;
-            document.getElementById('editLocation').textContent = agreement.kohde_nimi;
-            document.getElementById('editCustomer').textContent = agreement.asiakas_nimi;
+            document.getElementById('viewLocationEdit').classList.remove('hidden');
+            document.getElementById('viewCustomerEdit').classList.remove('hidden');
+            document.getElementById('editLocation').classList.add('hidden');
+            document.getElementById('editCustomer').classList.add('hidden');
+            document.getElementById('viewLocationEdit').textContent = agreement.kohde_nimi;
+            document.getElementById('viewCustomerEdit').textContent = agreement.asiakas_nimi;
 
             const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id) || [];
             const agreementWork = work.filter(w => w.sopimus_id == agreement.sopimus_id) || [];
@@ -537,12 +544,15 @@
             activeAgreementId = null;
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = 'Uusi sopimus';
+            document.getElementById('agreementPrompt').textContent = 'Luo uusi sopimus';
+            document.getElementById('editLocation').classList.remove('hidden');
+            document.getElementById('editCustomer').classList.remove('hidden');
+            document.getElementById('viewLocationEdit').classList.add('hidden');
+            document.getElementById('viewCustomerEdit').classList.add('hidden');
             document.getElementById('editType').value = 'Valitse sopimustyyli';
             document.getElementById('editInstallments').value = 0;
             populateCustomerDropdown('');
             populateLocationDropdown('');
-            populateAccessoryRows([]);
-            populateWorkRows([]);
         }
 
         async function saveAgreement() {

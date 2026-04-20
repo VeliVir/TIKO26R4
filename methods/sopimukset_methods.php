@@ -177,7 +177,6 @@ switch ($method) {
 
             if (!empty($data['tarvikkeet'])) {
                 foreach ($data['tarvikkeet'] as $t) {
-                    // Muunnetaan alennusprosentti takaisin hintatekijäksi (esim. 10% -> 0.9)
                     $hintatekija = 1 - ($t['alennus'] / 100);
                     $sql_t = "INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES ($1, $2, $3, $4)";
                     pg_query_params($yhteys, $sql_t, [$sopimus_id, $t['tarvike_id'], $t['maara'], $hintatekija]);
