@@ -107,12 +107,15 @@
                             <div class="details-row">
                                 <label>Työkohde</label>
                                     <span id="viewLocationEdit"></span>
-                                    <select id="editLocation" class="hidden"></select>
+                                    <select id="editLocation" class="hidden" onchange="onLocationSelect(this.value)"></select>
                             </div>
-                            <div class="details-row">
+                            <div id="locationInfo" class="hidden">
+                                <div class="details-row"><span>Asiakas</span><span id="locationCustomerName"></span></div>
+                                <div class="details-row"><span>Osoite</span><span id="locationAddress"></span></div>
+                            </div>
+                            <div class="details-row" id="customerEditRow">
                                 <label>Asiakas</label>
-                                    <span id="viewCustomerEdit"></span>
-                                    <select id="editCustomer" class="hidden"></select>
+                                <span id="viewCustomerEdit" class="details-value"></span>
                             </div>
                             <div class="details-row"><label for="editType">Tyyppi</label>
                                 <select id="editType" onchange="toggleWorkRow(this.value)">
@@ -147,6 +150,16 @@
                                 </div>
                                 <div id="workRows"></div>
                                 <button id="addWorkRowBtn" class="button button--secondary" onclick="addWorkRow()">Lisää rivi</button>
+                            </div>
+                            <div class="panel-section" id="urakkaWorkPanel">
+                                <h3>Työsuoritus</h3>
+                                <div class="details-row details-field-header">
+                                    <span></span>
+                                    <span>Työ</span>
+                                    <span>Määrä</span>
+                                    <span></span>
+                                </div>
+                                <div id="urakkaWorkRows"></div>
                             </div>
                         </div>
                     </div>
@@ -268,7 +281,8 @@
             `;
             
             const select = row.querySelector('.work-type')
-            populateWorkDropdown(select, data.nimi);
+            const workTypeHint = isUrakka ? 'Urakka' : data.nimi;
+            populateWorkDropdown(select, workTypeHint);
 
             return row;
         }
@@ -278,7 +292,8 @@
         }
 
         function addWorkRow(data) {
-            document.getElementById('workRows').appendChild(createWorkRow(data));
+            const containerId = isUrakka ? 'urakkaWorkRows' : 'workRows';
+            document.getElementById(containerId).appendChild(createWorkRow(data));
         }
 
         function removeRow(button) {
@@ -289,11 +304,8 @@
             if (allRows.length > 1) {
                 row.remove();
             } else {
-                const inputs = row.querySelectorAll('input, select');
-                inputs.forEach(input => {
-                    input.value = '';
-                });
-                
+                const inputs = row.querySelectorAll('input');
+                inputs.forEach(input => input.value = '');
                 const select = row.querySelector('select');
                 if (select) select.selectedIndex = 0;
             }
@@ -318,10 +330,8 @@
             
             if (selectedWork === 'Urakka') {
                 itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi === 'Urakka');
-                toggleWorkRow('Urakka');
             } else {
                 itemsToDisplay = uniqueWorkTypes.filter(w => w.nimi !== 'Urakka');
-                toggleWorkRow('toimiiko');
             }
 
             itemsToDisplay.forEach(workType => {
@@ -381,20 +391,71 @@
             document.getElementById('saveAgreementBtn').style.display = editMode ? 'inline-flex' : 'none';
         }
 
+        function onLocationSelect(kohdeId) {
+            const info = document.getElementById('locationInfo');
+            if (!kohdeId) {
+                info.classList.add('hidden');
+                return;
+            }
+
+            const location = locations.find(l => l.kohde_id == kohdeId);
+            if (!location) return;
+
+            const customer = customers.find(c => c.asiakas_id == location.asiakas_id);
+
+            document.getElementById('locationCustomerName').textContent = customer ? customer.nimi : '-';
+            document.getElementById('locationAddress').textContent = location.osoite || '-';
+            info.classList.remove('hidden');
+        }
+
         // Poistaa mahdollisuuden lisätä työrivejä jos työtyyppi on urakka ja muokkaa otsikoita.
         function toggleWorkRow(selectedWork) {
-            const addBtn = document.getElementById('addWorkRowBtn');
+            isUrakka = (selectedWork === 'Urakka');
+
             const urakkaWorkView = document.getElementById('agreementUrakkaWorkView');
             const workView = document.getElementById('agreementWorkView');
+            const urakkaWorkPanel = document.getElementById('urakkaWorkPanel');
+            const workPanel = document.getElementById('workPanel');
 
-            if (selectedWork === 'Urakka') {
-                if (editMode) addBtn.style.display = 'none';
-                workView.style.display = 'none';
+            workView.style.display = 'none';
+            urakkaWorkView.style.display = 'none';
+            urakkaWorkPanel.style.display = 'none';
+            workPanel.style.display = 'none';
+
+            if (isUrakka) {
                 urakkaWorkView.style.display = 'block';
+                if (editMode) urakkaWorkPanel.style.display = 'block';
             } else {
-                if (editMode) addBtn.style.display = 'block';
                 workView.style.display = 'block';
-                urakkaWorkView.style.display = 'none';
+                if (editMode) workPanel.style.display = 'block';
+            }
+            ensureAtLeastOneWorkRow();
+            refreshWorkDropdowns(selectedWork);
+        }
+
+        function refreshWorkDropdowns(type) {
+            const rows = document.querySelectorAll('#workRows .work-row');
+
+            rows.forEach(row => {
+                const select = row.querySelector('.work-type');
+                const currentValue = select.value;
+
+                const currentText = select.options[select.selectedIndex]?.text;
+
+                populateWorkDropdown(select, type === 'Urakka' ? 'Urakka' : currentText);
+
+                select.value = "";
+            });
+        }
+
+        function ensureAtLeastOneWorkRow() {
+            const containerId = isUrakka ? 'urakkaWorkRows' : 'workRows';
+            const container = document.getElementById(containerId);
+
+            if (!container) return;
+
+            if (container.children.length === 0) {
+                addWorkRow();
             }
         }
 
@@ -408,6 +469,19 @@
             activeAgreementId = null;
         }
 
+        function resetForm() {
+            document.getElementById('workRows').innerHTML = '';
+            document.getElementById('urakkaWorkRows').innerHTML = '';
+            document.getElementById('accessoryRows').innerHTML = '';
+
+            document.getElementById('editType').value = 'Urakka';
+            document.getElementById('editInstallments').value = '';
+
+            isUrakka = true;
+
+            document.getElementById('editLocation').value = '';
+        }
+
         function populateAccessoryRows(items) {
             const container = document.getElementById('accessoryRows');
             container.innerHTML = '';
@@ -419,13 +493,15 @@
         }
 
         function populateWorkRows(items) {
-            const container = document.getElementById('workRows');
+            const containerId = isUrakka ? 'urakkaWorkRows' : 'workRows';
+            const container = document.getElementById(containerId);
             container.innerHTML = '';
             if (!items || items.length === 0) {
                 addWorkRow();
                 return;
             }
             items.forEach(item => addWorkRow(item));
+            ensureAtLeastOneWorkRow();
         }
 
         function renderViewList(containerId, items, itemRenderer) {
@@ -450,6 +526,7 @@
             switchToDetailsView('view');
             document.getElementById('detailsTitle').textContent = `Sopimus: ${agreement.asiakas_nimi}`;
             document.getElementById('viewType').textContent = agreement.tyyppi;
+            toggleWorkRow(agreement.tyyppi);
             document.getElementById('viewInstallments').textContent = agreement.osia_laskussa;
             document.getElementById('viewCreated').textContent = new Date(agreement.luotu).toLocaleString('fi-FI');
             document.getElementById('viewUpdated').textContent = new Date(agreement.muokattu || agreement.luotu).toLocaleString('fi-FI');
@@ -483,7 +560,6 @@
             `);
             if (agreement.tyyppi !== 'Urakka') {
                 renderViewList('viewWorkList',  agreementWork, item => {
-                    toggleWorkRow(item.nimi);
                     let unit = '';
                     let amount = (item.tyomaara_tunneilla || 0);
                     unit = ' h';
@@ -506,7 +582,6 @@
                 });
             } else {
                 renderViewList('viewUrakkaWorkList',  agreementWork, item => {
-                    toggleWorkRow(item.nimi);
                     return`
                         <span>${item.nimi}</span>
                         <span>${formatCurrency(item.urakka_hinta)}</span>
@@ -517,20 +592,21 @@
         }
 
         function editAgreement(id) {
+            resetForm();
             const agreement = agreements.find(item => item.sopimus_id == id);
             if (!agreement) return;
             activeAgreementId = id;
             isUrakka = (agreement.tyyppi === 'Urakka');
             switchToDetailsView('edit');
+            toggleWorkRow(agreement.tyyppi);
             document.getElementById('detailsTitle').textContent = `Muokkaa sopimusta: ${agreement.asiakas_nimi}`;
             document.getElementById('agreementPrompt').textContent = 'Muokkaa sopimusta';
             document.getElementById('editType').value = agreement.tyyppi ?? '';
             document.getElementById('editInstallments').value = agreement.osia_laskussa ?? 1;
             document.getElementById('viewLocationEdit').classList.remove('hidden');
-            document.getElementById('viewCustomerEdit').classList.remove('hidden');
             document.getElementById('editLocation').classList.add('hidden');
-            document.getElementById('editCustomer').classList.add('hidden');
             document.getElementById('viewLocationEdit').textContent = agreement.kohde_nimi;
+            document.getElementById('customerEditRow').classList.remove('hidden');
             document.getElementById('viewCustomerEdit').textContent = agreement.asiakas_nimi;
 
             const agreementAccessories = accessories.filter(a => a.sopimus_id == agreement.sopimus_id) || [];
@@ -541,28 +617,39 @@
         }
 
         function addAgreement() {
+            resetForm();
             activeAgreementId = null;
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = 'Uusi sopimus';
             document.getElementById('agreementPrompt').textContent = 'Luo uusi sopimus';
             document.getElementById('editLocation').classList.remove('hidden');
-            document.getElementById('editCustomer').classList.remove('hidden');
             document.getElementById('viewLocationEdit').classList.add('hidden');
-            document.getElementById('viewCustomerEdit').classList.add('hidden');
-            document.getElementById('editType').value = 'Valitse sopimustyyli';
-            document.getElementById('editInstallments').value = 0;
-            populateCustomerDropdown('');
+            document.getElementById('customerEditRow').classList.add('hidden');
+            document.getElementById('editType').value = 'Urakka';
+            document.getElementById('editInstallments').value = 1;
             populateLocationDropdown('');
+            toggleWorkRow('Urakka');
         }
 
+        // todo asiakkaan lisääminen turhaa koska kohde on suoraan asiakkaalla.
         async function saveAgreement() {
             const type = document.getElementById('editType').value;
             const installments = parseInt(document.getElementById('editInstallments').value, 10);
-            const locationId = document.getElementById('editLocation').value;
-            const customerId = document.getElementById('editCustomer').value;
+            let locationId, customerId;
 
-            if (!locationId || !customerId || isNaN(installments)) {
-                alert('Täytä pakolliset kentät: Asiakas, Kohde ja Osia laskussa.');
+            if (activeAgreementId) {
+                const agreement = agreements.find(a => a.sopimus_id == activeAgreementId);
+                locationId = agreement.kohde_id;
+                console.log(locationId);
+            } else {
+                locationId = document.getElementById('editLocation').value;
+
+                const location = locations.find(l => l.kohde_id == locationId);
+                customerId = location ? location.asiakas_id : null;
+            }
+
+            if (!locationId || isNaN(installments)) {
+                alert('Täytä pakolliset kentät: Asiakas / Kohde ja Osia laskussa.');
                 return;
             }
 
@@ -577,8 +664,8 @@
 
             const workData = Array.from(document.querySelectorAll('#workRows .work-row')).map(row => {
                 const select = row.querySelector('.work-type');
-                const isUrakka2 = select.options[select.selectedIndex].text === 'Urakka';
-                
+                const isUrakka2 = type === 'Urakka';
+
                 return {
                     suoritus_id: select.value,
                     // Jos urakka, lähetetään hinta, muuten määrät
@@ -589,7 +676,7 @@
             }).filter(item => {
                 if (item.suoritus_id === "") return false;
                 
-                if (item.isUrakka2) {
+                if (type === 'Urakka') {
                     return item.urakka_hinta > 0;
                 } else {
                     return item.maara > 0;
@@ -614,13 +701,9 @@
                         ...payload
                     })
                 });
+                
+                const result = await response.json(); 
 
-                //const result = await response.json(); 
-                const text = await response.text(); 
-                console.log("Palvelimen vastaus:", text); 
-
-                // Jatka vasta sitten:
-                const result = JSON.parse(text);
                 if (result.success) {
                     window.location.reload();
                 } else {

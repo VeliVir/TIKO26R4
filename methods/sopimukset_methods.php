@@ -67,6 +67,7 @@ switch ($method) {
         // Suoritukset
         $sql_suoritukset = "SELECT 
                             ss.sopimus_id,
+                            s.suoritus_id,
                             s.nimi,
                             ss.tyomaara_tunneilla,
                             ss.hintatekija,
