@@ -546,7 +546,7 @@
 
             renderViewList('viewAccessoriesList', agreementAccessories, item => `
                 <span>${item.nimi}</span>
-                <span>${Number(item.maara).toFixed(0)} ${item.yksikko}${item.yksikko === 'metri' ? 'ä' : ''}</span>
+                <span>${Number(item.maara).toFixed(0)} ${item.yksikko === 'metri' ? 'm' : (item.yksikko || 'kpl')}</span>
                 <span>${
                     item.hintatekija == 1
                         ? 'Ei alennusta'

@@ -70,12 +70,23 @@
 
                     <div class="details-card" id="itemsView">
                         <h3>Tarvikkeet</h3>
-                        <div id="itemsList"></div>
+                        <div class="details-row details-field-header">
+                            <span>Tarvike</span>
+                            <span>Määrä</span>
+                            <span>Alennus %</span>
+                            <span>Ostohinta</span>
+                            <span>Myyntihinta</span>
+                            <span>Summa (Ilman ALV)</span>
+                            <span>ALV</span>
+                            <span>Loppuhinta</span>
+                        </div>
+                        <div class="details-table-row" id="itemsList"></div>
                     </div>
 
                     <div class="details-card" id="workView">
                         <h3>Työ</h3>
-                        <div id="workList"></div>
+                        <div class="details-row details-field-header" id="workHeader"></div>
+                        <div class="details-table-row" id="workList"></div>
                     </div>
 
                     <div class="details-card" id="pricingView">
@@ -258,36 +269,89 @@
             itemsList.innerHTML = '';
             if (details[id] && details[id].items && details[id].items.length > 0) {
                 details[id].items.forEach(item => {
+                    const unit = item.yksikko === 'metri' ? 'm' : (item.yksikko || 'kpl');
+                    const myyntihinta = parseFloat(item.myyntihinta);
+                    const summa = myyntihinta * parseFloat(item.hintatekija) * parseFloat(item.maara);
+                    const alv = summa * 0.24;
+                    const alennus = item.hintatekija == 1
+                        ? 'Ei alennusta'
+                        : ((1 - parseFloat(item.hintatekija)) * 100).toFixed(0) + ' %';
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'details-row';
                     itemDiv.innerHTML = `
-                        <span>${item.tarvike_nimi} (${item.maara} kpl × ${formatCurrency(item.hankintahinta)} × ${item.hintatekija})</span>
-                        <span>${formatCurrency(item.kokonaishinta)}</span>
+                        <span>${item.tarvike_nimi}</span>
+                        <span>${Number(item.maara).toFixed(0)} ${unit}</span>
+                        <span>${alennus}</span>
+                        <span>${formatCurrency(item.hankintahinta)}</span>
+                        <span>${formatCurrency(myyntihinta)}</span>
+                        <span>${formatCurrency(summa)}</span>
+                        <span>${formatCurrency(alv)}</span>
+                        <span>${formatCurrency(summa + alv)}</span>
                     `;
                     itemsList.appendChild(itemDiv);
                 });
             } else {
-                itemsList.innerHTML = '<div class="details-row"><span>Ei tarvikkeita</span><span>-</span></div>';
+                itemsList.innerHTML = '<div class="details-row"><span>Ei tarvikkeita</span></div>';
             }
-            
+
             // Työ card
             const workList = document.getElementById('workList');
+            const workHeader = document.getElementById('workHeader');
             workList.innerHTML = '';
             if (details[id] && details[id].work && details[id].work.length > 0) {
-                details[id].work.forEach(work => {
-                    const workDiv = document.createElement('div');
-                    workDiv.className = 'details-row';
-                    const description = work.urakka_hinta 
-                        ? `${work.suoritus_nimi} (urakka × ${work.hintatekija})`
-                        : `${work.suoritus_nimi} (${work.tyomaara_tunneilla} h × ${formatCurrency(work.tuntiveloitus)} × ${work.hintatekija})`;
-                    workDiv.innerHTML = `
-                        <span>${description}</span>
-                        <span>${formatCurrency(work.kokonaishinta)}</span>
+                const isUrakka = !!details[id].work[0].urakka_hinta;
+                if (isUrakka) {
+                    workHeader.innerHTML = `
+                        <span>Työ</span>
+                        <span>Hinta (Ilman ALV)</span>
+                        <span>ALV</span>
+                        <span>Loppuhinta</span>
                     `;
-                    workList.appendChild(workDiv);
-                });
+                    details[id].work.forEach(work => {
+                        const workDiv = document.createElement('div');
+                        workDiv.className = 'details-row';
+                        workDiv.innerHTML = `
+                            <span>${work.suoritus_nimi}</span>
+                            <span>${formatCurrency(work.urakka_hinta)}</span>
+                            <span>${formatCurrency(Number(work.urakka_hinta) * 0.24)}</span>
+                            <span>${formatCurrency(Number(work.urakka_hinta) * 1.24)}</span>
+                        `;
+                        workList.appendChild(workDiv);
+                    });
+                } else {
+                    workHeader.innerHTML = `
+                        <span>Työ</span>
+                        <span>Määrä</span>
+                        <span>Alennus %</span>
+                        <span>Hinta (Ilman ALV ja alennuksia)</span>
+                        <span>Hinta (Ilman ALV)</span>
+                        <span>ALV</span>
+                        <span>Loppuhinta</span>
+                    `;
+                    details[id].work.forEach(work => {
+                        const alennus = work.hintatekija == 1
+                            ? 'Ei alennusta'
+                            : ((1 - parseFloat(work.hintatekija)) * 100).toFixed(0) + ' %';
+                        const hintaIlmanAlv = Number(work.tuntiveloitus) / 1.24 * Number(work.tyomaara_tunneilla);
+                        const hintaAlennettu = hintaIlmanAlv * Number(work.hintatekija);
+                        const alv = hintaAlennettu * 0.24;
+                        const workDiv = document.createElement('div');
+                        workDiv.className = 'details-row';
+                        workDiv.innerHTML = `
+                            <span>${work.suoritus_nimi}</span>
+                            <span>${Number(work.tyomaara_tunneilla).toFixed(0)} h</span>
+                            <span>${alennus}</span>
+                            <span>${formatCurrency(hintaIlmanAlv)}</span>
+                            <span>${formatCurrency(hintaAlennettu)}</span>
+                            <span>${formatCurrency(alv)}</span>
+                            <span>${formatCurrency(hintaAlennettu + alv)}</span>
+                        `;
+                        workList.appendChild(workDiv);
+                    });
+                }
             } else {
-                workList.innerHTML = '<div class="details-row"><span>Ei työtä</span><span>-</span></div>';
+                workHeader.innerHTML = '';
+                workList.innerHTML = '<div class="details-row"><span>Ei työtä</span></div>';
             }
             
             // Hintaerittely card

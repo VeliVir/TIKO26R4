@@ -20,10 +20,10 @@ INSERT INTO Tyokohde (asiakas_id, nimi, osoite) VALUES
 
 INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa, alv) VALUES 
 (1, 'USB-kaapeli', 'Deltaco', 'kpl', 4.00, 24, DEFAULT),
-(2, 'Sähköjohto', 'Harju', 'metri', 1.00, 28, DEFAULT),
+(2, 'Sähköjohto', 'Harju', 'm', 1.00, 28, DEFAULT),
 (3, 'Opaskirja', 'Apustajat', 'kpl', 8.00, 18, 1.10),
 (2, 'Pistorasia', 'Jussi', 'kpl', 10.00, 10, DEFAULT),
-(2, 'Maakaapeli', 'Kaapelsson', 'metri', 4.00, 300, DEFAULT),
+(2, 'Maakaapeli', 'Kaapelsson', 'm', 4.00, 300, DEFAULT),
 (4, 'Sähkökeskus', 'Junker', 'kpl', 300.00, 3, DEFAULT),
 (4, 'Palohälytin', 'Incendium', 'kpl', 4.00, 15, DEFAULT);
 

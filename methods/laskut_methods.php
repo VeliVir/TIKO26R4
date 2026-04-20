@@ -112,10 +112,12 @@ switch ($method) {
             $sopimus_id = $lasku['sopimus_id'];
             
             // Get items
-            $sql_items = "SELECT t.nimi AS tarvike_nimi, 
-                                 st.maara, 
-                                 t.hankintahinta, 
-                                 st.hintatekija, 
+            $sql_items = "SELECT t.nimi AS tarvike_nimi,
+                                 t.yksikko,
+                                 st.maara,
+                                 t.hankintahinta,
+                                 t.hankintahinta * 1.25 AS myyntihinta,
+                                 st.hintatekija,
                                  (st.maara * t.hankintahinta * st.hintatekija) AS kokonaishinta
                          FROM Sopimus_tarvike st
                          JOIN Tarvike t ON t.tarvike_id = st.tarvike_id
