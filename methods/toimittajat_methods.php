@@ -6,6 +6,30 @@ $method = $data['real_method'] ?? $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
+        if (isset($_GET['toimittaja_id'])) {
+            $toimittaja_id = (int)$_GET['toimittaja_id'];
+            $sql_products = "SELECT ta.nimi AS tarvike_nimi,
+                                    ta.yksikko,
+                                    tk.nimi AS kohde_nimi,
+                                    a.etunimi || ' ' || a.sukunimi AS asiakas_nimi,
+                                    st.maara
+                             FROM Tarvike ta
+                             JOIN Sopimus_tarvike st ON st.tarvike_id = ta.tarvike_id
+                             JOIN Sopimus s ON s.sopimus_id = st.sopimus_id
+                             JOIN Tyokohde tk ON tk.kohde_id = s.kohde_id
+                             JOIN Asiakas a ON a.asiakas_id = tk.asiakas_id
+                             WHERE ta.toimittaja_id = $1 AND ta.poistettu IS NULL
+                             ORDER BY ta.nimi ASC, tk.nimi ASC";
+            $result_p = pg_query_params($yhteys, $sql_products, [$toimittaja_id]);
+            if (!$result_p) {
+                echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+                break;
+            }
+            $products = pg_fetch_all($result_p) ?: [];
+            echo json_encode(['success' => true, 'products' => $products]);
+            break;
+        }
+
         $sql = "SELECT t.toimittaja_id,
                        t.nimi,
                        t.osoite,

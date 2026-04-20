@@ -69,6 +69,24 @@
                     </div>
                 </div>
 
+                <div class="details-card hidden" id="supplierProductsCard">
+                    <h3>Toimitukset työkohteisiin</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>Tarvike</th>
+                                    <th>Työkohde</th>
+                                    <th>Asiakas</th>
+                                    <th>Määrä</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="details-actions">
                     <button class="button button--primary" id="saveSupplierBtn" onclick="saveSupplier()" style="display: none;">Tallenna</button>
                     <button class="button button--danger" id="deleteSupplierBtn" onclick="deleteSupplier()" style="display: none;">Poista</button>
@@ -181,6 +199,32 @@
             document.getElementById('viewName').textContent = s.nimi || '-';
             document.getElementById('viewAddress').textContent = s.osoite || '-';
             document.getElementById('viewCount').textContent = s.tarvike_maara;
+            loadProducts(id);
+        }
+
+        async function loadProducts(toimittajaId) {
+            const card = document.getElementById('supplierProductsCard');
+            const tbody = document.getElementById('productsTableBody');
+            card.classList.add('hidden');
+            tbody.innerHTML = '';
+            try {
+                const response = await fetch(`methods/toimittajat_methods.php?toimittaja_id=${toimittajaId}`);
+                const data = await response.json();
+                if (!data.success || !data.products.length) return;
+                data.products.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.tarvike_nimi || '-'}</td>
+                        <td>${row.kohde_nimi || '-'}</td>
+                        <td>${row.asiakas_nimi || '-'}</td>
+                        <td>${parseFloat(row.maara).toLocaleString('fi-FI')} ${row.yksikko || ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                card.classList.remove('hidden');
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function editSupplier(id) {

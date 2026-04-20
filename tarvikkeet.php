@@ -100,6 +100,23 @@
                     </div>
                 </div>
 
+                <div class="details-card hidden" id="accessoryUsageCard">
+                    <h3>Käyttökohteet</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="usageTable">
+                            <thead>
+                                <tr>
+                                    <th>Työkohde</th>
+                                    <th>Asiakas</th>
+                                    <th>Määrä</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usageTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="details-actions">
                     <button class="button button--primary" id="saveAccessoryBtn" onclick="saveAccessory()">Tallenna</button>
                     <button class="button button--danger" id="deleteAccessoryBtn" onclick="deleteAccessory()" style="display: none;">Poista</button>
@@ -212,6 +229,31 @@
             const vatAmount = item.myyntihinta * (item.alv_prosentti / 100);
             document.getElementById('viewVatAmount').textContent = formatCurrency(vatAmount);
             document.getElementById('viewTotalPrice').textContent = formatCurrency(item.kokonaishinta);
+            loadUsage(id);
+        }
+
+        async function loadUsage(tarvikeId) {
+            const card = document.getElementById('accessoryUsageCard');
+            const tbody = document.getElementById('usageTableBody');
+            card.classList.add('hidden');
+            tbody.innerHTML = '';
+            try {
+                const response = await fetch(`methods/tarvikkeet_methods.php?tarvike_id=${tarvikeId}`);
+                const data = await response.json();
+                if (!data.success || !data.usage.length) return;
+                data.usage.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.kohde_nimi}</td>
+                        <td>${row.asiakas_nimi}</td>
+                        <td>${parseFloat(row.maara).toLocaleString('fi-FI')} ${row.yksikko || ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                card.classList.remove('hidden');
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function editAccessory(id) {

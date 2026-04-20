@@ -9,6 +9,31 @@ $method = $_POST['real_method'] ?? ($data['real_method'] ?? $_SERVER['REQUEST_ME
 
 switch ($method) {
     case 'GET':
+        if (isset($_GET['tarvike_id'])) {
+            $tarvike_id = (int)$_GET['tarvike_id'];
+            $sql_usage = "SELECT tk.nimi AS kohde_nimi,
+                                 a.etunimi || ' ' || a.sukunimi AS asiakas_nimi,
+                                 st.maara,
+                                 ta.yksikko
+                          FROM Sopimus_tarvike st
+                          JOIN Sopimus s ON s.sopimus_id = st.sopimus_id
+                          JOIN Tyokohde tk ON tk.kohde_id = s.kohde_id
+                          JOIN Asiakas a ON a.asiakas_id = tk.asiakas_id
+                          JOIN Tarvike ta ON ta.tarvike_id = st.tarvike_id
+                          WHERE st.tarvike_id = $1
+                          ORDER BY tk.nimi ASC";
+            $result_usage = pg_query_params($yhteys, $sql_usage, [$tarvike_id]);
+            if (!$result_usage) {
+                ob_clean();
+                echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+                break;
+            }
+            $usage = pg_fetch_all($result_usage) ?: [];
+            ob_clean();
+            echo json_encode(['success' => true, 'usage' => $usage]);
+            break;
+        }
+
         $sql_tarvikkeet = "SELECT ta.tarvike_id,
                                   ta.toimittaja_id,
                                   ta.nimi,
