@@ -10,12 +10,13 @@ switch ($method) {
         $suoritus_sql = getSuoritusSumSQL();
         $tarvike_sql = getTarvikeSumSQL();
 
-        $sql_laskut = "SELECT l.lasku_id, 
+        $sql_laskut = "SELECT l.lasku_id,
                               l.sopimus_id,
                               l.edellinen_lasku_id,
                               l.Pvm,
                               l.erapaiva,
                               l.maksupaiva,
+                              a.asiakas_id,
                               (a.etunimi || ' ' || a.sukunimi) AS asiakas_nimi,
                               a.osoite AS asiakas_osoite,
                               CASE WHEN l.maksupaiva IS NOT NULL THEN true ELSE false END AS paid,
@@ -94,9 +95,11 @@ switch ($method) {
         }
 
         // Fetch sopimukset with customer info
-        $sql_sopimukset = "SELECT s.sopimus_id, 
+        $sql_sopimukset = "SELECT s.sopimus_id,
                                    s.tyyppi,
+                                   a.asiakas_id,
                                    (a.etunimi || ' ' || a.sukunimi) AS asiakas_nimi,
+                                   a.osoite AS asiakas_osoite,
                                    t.nimi AS kohde_nimi
                             FROM Sopimus s
                             JOIN Tyokohde t ON s.kohde_id = t.kohde_id

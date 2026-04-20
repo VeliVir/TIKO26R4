@@ -165,8 +165,24 @@
                     </div>
                 </div>
 
+                <div class="details-card full-width hidden" id="createInvoicePanel" style="margin-top: 24px;">
+                    <h3>Luo lasku</h3>
+                    <div class="details-row">
+                        <label for="invoicePvm">Laskutuspäivämäärä</label>
+                        <input type="date" id="invoicePvm">
+                    </div>
+                    <div class="details-row">
+                        <label for="invoiceErapaiva">Eräpäivämäärä</label>
+                        <input type="date" id="invoiceErapaiva">
+                    </div>
+                    <div class="location-form-actions">
+                        <button class="button button--primary" onclick="confirmCreateInvoice()">Luo lasku</button>
+                        <button class="button button--ghost" onclick="cancelCreateInvoice()">Peruuta</button>
+                    </div>
+                </div>
+
                 <div class="details-actions" id="detailsActions">
-                    <button class="button button--primary" id="createInvoiceBtn" class="hidden" onclick="createInvoice()">Luo lasku</button>
+                    <button class="button button--primary button--large" id="createInvoiceBtn" onclick="createInvoice()">Luo lasku</button>
                     <button class="button button--primary" id="saveAgreementBtn" onclick="saveAgreement()" style="display: none;">Tallenna</button>
                     <button class="button button--danger" id="deleteAgreementBtn" onclick="deleteAgreement()" style="display: none;">Poista</button>
                 </div>
@@ -390,6 +406,7 @@
             document.getElementById('createInvoiceBtn').classList.toggle('hidden', editMode);
             document.getElementById('saveAgreementBtn').style.display = editMode ? 'inline-flex' : 'none';
             document.getElementById('deleteAgreementBtn').style.display = (editMode && activeAgreementId) ? 'inline-flex' : 'none';
+            document.getElementById('createInvoicePanel').classList.add('hidden');
         }
 
         function onLocationSelect(kohdeId) {
@@ -461,12 +478,46 @@
         }
 
         function createInvoice() {
-            // TODO: Implement invoice creation
+            const today = new Date().toISOString().split('T')[0];
+            const due = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            document.getElementById('invoicePvm').value = today;
+            document.getElementById('invoiceErapaiva').value = due;
+            document.getElementById('createInvoicePanel').classList.remove('hidden');
+        }
+
+        function cancelCreateInvoice() {
+            document.getElementById('createInvoicePanel').classList.add('hidden');
+        }
+
+        async function confirmCreateInvoice() {
+            const pvm = document.getElementById('invoicePvm').value;
+            const erapaiva = document.getElementById('invoiceErapaiva').value;
+            if (!pvm || !erapaiva) {
+                alert('Täytä päivämäärät.');
+                return;
+            }
+            try {
+                const response = await fetch('methods/laskut_methods.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sopimus_id: parseInt(activeAgreementId), pvm, erapaiva, real_method: 'POST' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = 'laskut.php';
+                } else {
+                    alert('Laskun luonti epäonnistui.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe palvelimeen.');
+            }
         }
 
         function backToMain() {
             document.getElementById('mainView').classList.remove('hidden');
             document.getElementById('detailsView').classList.add('hidden');
+            document.getElementById('createInvoicePanel').classList.add('hidden');
             activeAgreementId = null;
         }
 

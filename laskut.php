@@ -17,10 +17,8 @@
 
             <div class="top-actions">
                 <button type="button" class="button button--primary" onclick="addInvoice()">Lisää uusi lasku</button>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button class="button button--primary" onclick="createReminders()">Luo muistutuslaskut</button>
-                    <span id="creation-message" style="font-weight: bold; color: red; font-size: 1.1rem; min-width: 18rem;"></span>
-                </div>
+                <button type="button" class="button button--primary" onclick="createReminders()">Luo muistutuslaskut</button>
+                <span id="creation-message" style="font-weight: bold; color: red; font-size: 1.1rem; min-width: 18rem;"></span>
                 <div class="filter-field">
                     <label for="invoiceFilter">Suodata</label>
                     <input type="text" id="invoiceFilter" placeholder="Etsi asiakkaan nimellä" oninput="filterInvoices()">
@@ -102,7 +100,7 @@
                     <h3>Muokkaa laskua</h3>
                     <div class="details-row">
                         <label for="editSopimus">Sopimus</label>
-                        <select id="editSopimus">
+                        <select id="editSopimus" onchange="onSopimusSelect(this.value)">
                             <option value="">Valitse sopimus</option>
                         </select>
                     </div>
@@ -232,6 +230,8 @@
             document.getElementById('mainView').classList.add('hidden');
             document.getElementById('detailsView').classList.remove('hidden');
             editMode = mode === 'edit';
+            const isAddNew = editMode && !activeInvoiceId;
+            document.getElementById('invoiceContainer').style.display = isAddNew ? 'none' : '';
             document.getElementById('invoiceInfoView').classList.toggle('hidden', editMode);
             document.getElementById('invoiceInfoEdit').classList.toggle('hidden', !editMode);
             document.getElementById('saveInvoiceBtn').style.display = editMode ? 'inline-flex' : 'none';
@@ -372,14 +372,13 @@
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = `Muokkaa laskua: ${invoice.asiakas_nimi}`;
             
-            const sopimus = sopimukset.find(s => s.sopimus_id == invoice.sopimus_id);
+            const sopimus = sopimukset.find(s => Number(s.sopimus_id) === Number(invoice.sopimus_id));
             document.getElementById('editAddress').value = invoice.asiakas_osoite || '';
             document.getElementById('editPvm').value = invoice.pvm;
             document.getElementById('editErapaiva').value = invoice.erapaiva;
             document.getElementById('editMaksupaiva').value = invoice.maksupaiva || '';
-            
             populateSopimuksetDropdown(invoice.sopimus_id);
-            populatePreviousInvoicesDropdown(invoice.edellinen_lasku_id);
+            populatePreviousInvoicesDropdown(invoice.edellinen_lasku_id, sopimus?.asiakas_id);
         }
 
         function addInvoice() {
@@ -392,6 +391,12 @@
             document.getElementById('editMaksupaiva').value = '';
             populateSopimuksetDropdown('');
             populatePreviousInvoicesDropdown('');
+        }
+
+        function onSopimusSelect(sopimusId) {
+            const valittuSopimus = sopimukset.find(s => Number(s.sopimus_id) === Number(sopimusId));
+            document.getElementById('editAddress').value = valittuSopimus?.asiakas_osoite || '';
+            populatePreviousInvoicesDropdown('', valittuSopimus?.asiakas_id ?? null);
         }
 
         function populateSopimuksetDropdown(selectedId) {
@@ -408,10 +413,12 @@
             });
         }
 
-        function populatePreviousInvoicesDropdown(selectedId) {
+        function populatePreviousInvoicesDropdown(selectedId, filterAsiakasId = null) {
             const select = document.getElementById('editEdellinen');
             select.innerHTML = '<option value="">Ei edeltävää</option>';
-            invoices.forEach(inv => {
+            invoices
+                .filter(inv => filterAsiakasId === null || Number(inv.asiakas_id) === Number(filterAsiakasId))
+                .forEach(inv => {
                 const option = document.createElement('option');
                 option.value = inv.lasku_id;
                 option.textContent = `${toFinnishDate(inv.pvm)} - ${inv.asiakas_nimi}`;
