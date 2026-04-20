@@ -90,9 +90,7 @@
                         <label for="editVat">ALV</label>
                         <select id="editVat">
                             <option value="10">10%</option>
-                            <option value="14">14%</option>
                             <option value="24">24%</option>
-                            <option value="25.5">25,5%</option>
                         </select>
                     </div>
                     <div class="details-row">
