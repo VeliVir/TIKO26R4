@@ -172,7 +172,7 @@ BEGIN
     JOIN Tyokohde tk ON s.kohde_id = tk.kohde_id
     WHERE s.sopimus_id = NEW.sopimus_id;
 
-    NEW.hintatekija := laske_hintatekija_asiakkaalle(v_asiakas_id);
+    NEW.hintatekija := NEW.hintatekija * laske_hintatekija_asiakkaalle(v_asiakas_id);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -187,7 +187,7 @@ BEGIN
     JOIN Tyokohde tk ON s.kohde_id = tk.kohde_id
     WHERE s.sopimus_id = NEW.sopimus_id;
 
-    NEW.hintatekija := laske_hintatekija_asiakkaalle(v_asiakas_id);
+    NEW.hintatekija := NEW.hintatekija * laske_hintatekija_asiakkaalle(v_asiakas_id);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
