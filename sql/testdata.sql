@@ -43,17 +43,6 @@ INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu) VALUES
 INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu, muokattu) VALUES
 (6, 'Urakka', 1, '2026-02-06', '2026-02-20');
 
-INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VALUES 
-(1, NULL, '2025-10-01', '2025-10-15', '2025-12-01'),
-(1, 1, '2025-10-25', '2025-11-10', '2025-12-01'),
-(1, 2, '2025-11-27', '2025-12-13', '2025-12-01'),
-(2, NULL, '2026-02-01', '2026-02-15', '2026-02-15'),
-(3, NULL, '2026-02-01', '2026-02-15', NULL),
-(3, 5, '2026-02-15', '2026-03-01', NULL),
-(3, 6, '2026-03-05', '2026-03-20', NULL),
-(4, NULL, '2026-03-01', '2026-03-15', NULL),
-(5, NULL, '2026-03-01', '2026-03-15', NULL);
-
 INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES 
 (1, 1, 1, 1.00),
 (2, 2, 3, 0.90),
@@ -76,3 +65,14 @@ INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hinta
 (5, 2, 3, 1.00, NULL),
 (5, 3, 12, 1.00, NULL),
 (6, 1, NULL, 1.00, 5004.21);
+
+INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VALUES 
+(1, NULL, '2025-10-01', '2025-10-15', '2025-12-01'),
+(1, 1, '2025-10-25', '2025-11-10', '2025-12-01'),
+(1, 2, '2025-11-27', '2025-12-13', '2025-12-01'),
+(2, NULL, '2026-02-01', '2026-02-15', '2026-02-15'),
+(3, NULL, '2026-02-01', '2026-02-15', NULL),
+(3, 5, '2026-02-15', '2026-03-01', NULL),
+(3, 6, '2026-03-05', '2026-03-20', NULL),
+(4, NULL, '2026-03-01', '2026-03-15', NULL),
+(5, NULL, '2026-03-01', '2026-03-15', NULL);

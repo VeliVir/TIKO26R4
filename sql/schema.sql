@@ -166,11 +166,17 @@ CREATE OR REPLACE FUNCTION trg_fn_hintatekija_sopimus_tarvike()
 RETURNS TRIGGER AS $$
 DECLARE
     v_asiakas_id INT;
+    v_tyyppi VARCHAR(50);
 BEGIN
-    SELECT tk.asiakas_id INTO v_asiakas_id
+    SELECT tk.asiakas_id, s.tyyppi
+    INTO v_asiakas_id, v_tyyppi
     FROM Sopimus s
     JOIN Tyokohde tk ON s.kohde_id = tk.kohde_id
     WHERE s.sopimus_id = NEW.sopimus_id;
+
+    IF v_tyyppi != 'Urakka' THEN
+        RETURN NEW;
+    END IF;
 
     NEW.hintatekija := NEW.hintatekija * laske_hintatekija_asiakkaalle(v_asiakas_id);
     RETURN NEW;
@@ -181,11 +187,17 @@ CREATE OR REPLACE FUNCTION trg_fn_hintatekija_sopimus_suoritus()
 RETURNS TRIGGER AS $$
 DECLARE
     v_asiakas_id INT;
+    v_tyyppi VARCHAR(50);
 BEGIN
-    SELECT tk.asiakas_id INTO v_asiakas_id
+    SELECT tk.asiakas_id, s.tyyppi
+    INTO v_asiakas_id, v_tyyppi
     FROM Sopimus s
     JOIN Tyokohde tk ON s.kohde_id = tk.kohde_id
     WHERE s.sopimus_id = NEW.sopimus_id;
+
+    IF v_tyyppi != 'Urakka' THEN
+        RETURN NEW;
+    END IF;
 
     NEW.hintatekija := NEW.hintatekija * laske_hintatekija_asiakkaalle(v_asiakas_id);
     RETURN NEW;
