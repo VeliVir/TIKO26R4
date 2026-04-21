@@ -166,19 +166,6 @@
                 </div>
 
                 <div class="details-card full-width hidden" id="createInvoicePanel" style="margin-top: 24px;">
-                    <h3>Luo lasku</h3>
-                    <div class="details-row">
-                        <label for="invoicePvm">Laskutuspäivämäärä</label>
-                        <input type="date" id="invoicePvm">
-                    </div>
-                    <div class="details-row">
-                        <label for="invoiceErapaiva">Eräpäivämäärä</label>
-                        <input type="date" id="invoiceErapaiva">
-                    </div>
-                    <div class="location-form-actions">
-                        <button class="button button--primary" onclick="confirmCreateInvoice()">Luo lasku</button>
-                        <button class="button button--ghost" onclick="cancelCreateInvoice()">Peruuta</button>
-                    </div>
                 </div>
 
                 <div class="details-actions" id="detailsActions">
@@ -478,11 +465,40 @@
         }
 
         function createInvoice() {
+            const agreement = agreements.find(a => a.sopimus_id == activeAgreementId);
+            const n = parseInt(agreement?.osia_laskussa) || 1;
             const today = new Date().toISOString().split('T')[0];
             const due = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-            document.getElementById('invoicePvm').value = today;
-            document.getElementById('invoiceErapaiva').value = due;
-            document.getElementById('createInvoicePanel').classList.remove('hidden');
+
+            const panel = document.getElementById('createInvoicePanel');
+            let html = `<h3>Luo lasku${n > 1 ? ` (${n} osaa)` : ''}</h3>`;
+
+            for (let i = 0; i < n; i++) {
+                const label = n > 1 ? ` — Osa ${i + 1}/${n}` : '';
+                html += `
+                    <div class="invoice-part">
+                        ${n > 1 ? `<strong style="display:block;margin-bottom:8px;">Lasku${label}</strong>` : ''}
+                        <div class="details-row">
+                            <label>Laskutuspäivämäärä</label>
+                            <input type="date" class="invoice-pvm" value="${today}">
+                        </div>
+                        <div class="details-row">
+                            <label>Eräpäivämäärä</label>
+                            <input type="date" class="invoice-erapaiva" value="${due}">
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="location-form-actions">
+                    <button class="button button--primary" onclick="confirmCreateInvoice()">Luo lasku</button>
+                    <button class="button button--ghost" onclick="cancelCreateInvoice()">Peruuta</button>
+                </div>
+            `;
+
+            panel.innerHTML = html;
+            panel.classList.remove('hidden');
         }
 
         function cancelCreateInvoice() {
@@ -490,24 +506,34 @@
         }
 
         async function confirmCreateInvoice() {
-            const pvm = document.getElementById('invoicePvm').value;
-            const erapaiva = document.getElementById('invoiceErapaiva').value;
-            if (!pvm || !erapaiva) {
-                alert('Täytä päivämäärät.');
-                return;
-            }
-            try {
-                const response = await fetch('methods/laskut_methods.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sopimus_id: parseInt(activeAgreementId), pvm, erapaiva, real_method: 'POST' })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    window.location.href = 'laskut.php';
-                } else {
-                    alert('Laskun luonti epäonnistui.');
+            const agreement = agreements.find(a => a.sopimus_id == activeAgreementId);
+            const n = parseInt(agreement?.osia_laskussa) || 1;
+            const osuus = 1 / n;
+
+            const parts = document.querySelectorAll('#createInvoicePanel .invoice-part');
+            for (const part of parts) {
+                if (!part.querySelector('.invoice-pvm').value || !part.querySelector('.invoice-erapaiva').value) {
+                    alert('Täytä kaikki päivämäärät.');
+                    return;
                 }
+            }
+
+            try {
+                for (const part of parts) {
+                    const pvm = part.querySelector('.invoice-pvm').value;
+                    const erapaiva = part.querySelector('.invoice-erapaiva').value;
+                    const response = await fetch('methods/laskut_methods.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sopimus_id: parseInt(activeAgreementId), pvm, erapaiva, osuus, real_method: 'POST' })
+                    });
+                    const result = await response.json();
+                    if (!result.success) {
+                        alert('Laskun luonti epäonnistui.');
+                        return;
+                    }
+                }
+                window.location.href = 'laskut.php';
             } catch (e) {
                 console.error(e);
                 alert('Yhteysvirhe palvelimeen.');

@@ -16,11 +16,12 @@ switch ($method) {
                               l.Pvm,
                               l.erapaiva,
                               l.maksupaiva,
+                              COALESCE(1.0 / NULLIF(s.osia_laskussa, 0), 1) AS osuus,
                               a.asiakas_id,
                               (a.etunimi || ' ' || a.sukunimi) AS asiakas_nimi,
                               a.osoite AS asiakas_osoite,
                               CASE WHEN l.maksupaiva IS NOT NULL THEN true ELSE false END AS paid,
-                              COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0) AS amount
+                              (COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0)) * COALESCE(1.0 / NULLIF(s.osia_laskussa, 0), 1) AS amount
                         FROM Lasku l
                         JOIN Sopimus s ON l.sopimus_id = s.sopimus_id
                         JOIN Tyokohde t ON s.kohde_id = t.kohde_id

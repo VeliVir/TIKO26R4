@@ -267,11 +267,12 @@
             // Tarvikkeet card
             const itemsList = document.getElementById('itemsList');
             itemsList.innerHTML = '';
+            const osuus = parseFloat(invoice.osuus) || 1;
             if (details[id] && details[id].items && details[id].items.length > 0) {
                 details[id].items.forEach(item => {
                     const unit = item.yksikko === 'metri' ? 'm' : (item.yksikko || 'kpl');
                     const myyntihinta = parseFloat(item.myyntihinta);
-                    const summa = myyntihinta * parseFloat(item.hintatekija) * parseFloat(item.maara);
+                    const summa = myyntihinta * parseFloat(item.hintatekija) * parseFloat(item.maara) * osuus;
                     const alv = summa * (parseFloat(item.alv) - 1);
                     const alennus = item.hintatekija == 1
                         ? 'Ei alennusta'
@@ -308,13 +309,14 @@
                         <span>Loppuhinta</span>
                     `;
                     details[id].work.forEach(work => {
+                        const urakkaHinta = Number(work.urakka_hinta) * osuus;
                         const workDiv = document.createElement('div');
                         workDiv.className = 'details-row';
                         workDiv.innerHTML = `
                             <span>${work.suoritus_nimi}</span>
-                            <span>${formatCurrency(work.urakka_hinta)}</span>
-                            <span>${formatCurrency(Number(work.urakka_hinta) * 0.24)}</span>
-                            <span>${formatCurrency(Number(work.urakka_hinta) * 1.24)}</span>
+                            <span>${formatCurrency(urakkaHinta)}</span>
+                            <span>${formatCurrency(urakkaHinta * 0.24)}</span>
+                            <span>${formatCurrency(urakkaHinta * 1.24)}</span>
                         `;
                         workList.appendChild(workDiv);
                     });
@@ -332,7 +334,7 @@
                         const alennus = work.hintatekija == 1
                             ? 'Ei alennusta'
                             : ((1 - parseFloat(work.hintatekija)) * 100).toFixed(0) + ' %';
-                        const hintaIlmanAlv = Number(work.tuntiveloitus) / 1.24 * Number(work.tyomaara_tunneilla);
+                        const hintaIlmanAlv = Number(work.tuntiveloitus) / 1.24 * Number(work.tyomaara_tunneilla) * osuus;
                         const hintaAlennettu = hintaIlmanAlv * Number(work.hintatekija);
                         const alv = hintaAlennettu * 0.24;
                         const workDiv = document.createElement('div');
