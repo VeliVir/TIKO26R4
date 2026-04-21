@@ -121,6 +121,7 @@ switch ($method) {
                                  t.hankintahinta,
                                  t.hankintahinta * 1.25 AS myyntihinta,
                                  st.hintatekija,
+                                 t.alv,
                                  (st.maara * t.hankintahinta * st.hintatekija) AS kokonaishinta
                          FROM Sopimus_tarvike st
                          JOIN Tarvike t ON t.tarvike_id = st.tarvike_id

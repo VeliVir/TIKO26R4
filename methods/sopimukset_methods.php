@@ -37,7 +37,7 @@ switch ($method) {
         }
 
         // Tarvikkeet
-        $sql_tarvikeet = "SELECT 
+        $sql_tarvikeet = "SELECT
                             st.sopimus_id,
                             t.tarvike_id,
                             t.nimi,
@@ -45,7 +45,8 @@ switch ($method) {
                             st.maara,
                             st.hintatekija,
                             t.hankintahinta,
-                            t.hankintahinta * 1.25 AS myyntihinta
+                            t.hankintahinta * 1.25 AS myyntihinta,
+                            t.alv
                         FROM Sopimus_tarvike st
                         JOIN Tarvike t ON t.tarvike_id = st.tarvike_id";
 

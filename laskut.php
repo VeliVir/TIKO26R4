@@ -272,7 +272,7 @@
                     const unit = item.yksikko === 'metri' ? 'm' : (item.yksikko || 'kpl');
                     const myyntihinta = parseFloat(item.myyntihinta);
                     const summa = myyntihinta * parseFloat(item.hintatekija) * parseFloat(item.maara);
-                    const alv = summa * 0.24;
+                    const alv = summa * (parseFloat(item.alv) - 1);
                     const alennus = item.hintatekija == 1
                         ? 'Ei alennusta'
                         : ((1 - parseFloat(item.hintatekija)) * 100).toFixed(0) + ' %';

@@ -608,8 +608,8 @@
                 <span>${formatCurrency(item.hankintahinta)}</span>
                 <span>${formatCurrency(item.myyntihinta)}</span>
                 <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara))}</span>
-                <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara) * 0.24)}</span>
-                <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara) * 1.24)}</span>
+                <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara) * (Number(item.alv) - 1))}</span>
+                <span>${formatCurrency(Number(item.myyntihinta) * Number(item.hintatekija) * Number(item.maara) * Number(item.alv))}</span>
             `);
             if (agreement.tyyppi !== 'Urakka') {
                 renderViewList('viewWorkList',  agreementWork, item => {
