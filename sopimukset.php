@@ -276,7 +276,7 @@
             return row;
         } 
 
-        function createWorkRow(data = { nimi: '', tyomaara_tunneilla: 1, hintatekija: 0 }) {
+        function createWorkRow(data = { nimi: '', tyomaara_tunneilla: 1, hintatekija: 1 }) {
             const row = document.createElement('div');
             row.className = 'details-row work-row';
             
@@ -430,12 +430,13 @@
         // Poistaa mahdollisuuden lisätä työrivejä jos työtyyppi on urakka ja muokkaa otsikoita.
         function toggleWorkRow(selectedWork) {
             isUrakka = (selectedWork === 'Urakka');
-
+            
             const urakkaWorkView = document.getElementById('agreementUrakkaWorkView');
             const workView = document.getElementById('agreementWorkView');
             const urakkaWorkPanel = document.getElementById('urakkaWorkPanel');
             const workPanel = document.getElementById('workPanel');
-
+            
+            document.getElementById('editInstallments').closest('.details-row').style.display = isUrakka ? '' : 'none';
             workView.style.display = 'none';
             urakkaWorkView.style.display = 'none';
             urakkaWorkPanel.style.display = 'none';
