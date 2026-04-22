@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     // Salasanaa ei ole salattu, mutta oikeassa tilanteessa salasana salattaisiin.
-    $sql = "SELECT salasana FROM Kayttaja WHERE sahkoposti = $1";
+    $sql = "SELECT salasana, rooli FROM Kayttaja WHERE sahkoposti = $1";
     $tulos = pg_query_params($yhteys, $sql, [$username]);
 
     if ($tulos && pg_num_rows($tulos) > 0) {
