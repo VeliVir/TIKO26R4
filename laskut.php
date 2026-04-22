@@ -72,8 +72,7 @@
                             <span>Tarvike</span>
                             <span>Määrä</span>
                             <span>Alennus %</span>
-                            <span>Ostohinta</span>
-                            <span>Myyntihinta</span>
+                            <span>Yksikköhinta</span>
                             <span>Summa (Ilman ALV)</span>
                             <span>ALV</span>
                             <span>Loppuhinta</span>
@@ -90,6 +89,8 @@
                     <div class="details-card" id="pricingView">
                         <h3>Hintaerittely</h3>
                         <div class="details-row"><span>Perussumma</span><span id="viewBaseAmount"></span></div>
+                        <div class="details-row"><span>ALV-osuus</span><span id="viewAlvAmount"></span></div>
+                        <div class="details-row"><span>Kotitalousvähennys- kelpoisuus</span><span id="viewKTAmount"></span></div>
                         <div class="details-row"><span>Laskutuslisä</span><span id="viewLaskutuslisa"></span></div>
                         <div class="details-row"><span>Viivästyskorko</span><span id="viewViivastyskorko"></span></div>
                         <div class="details-row total-row"><span><strong>Yhteensä</strong></span><span id="viewTotal"></span></div>
@@ -211,7 +212,7 @@
                         <td>${toFinnishDate(invoice.pvm)}</td>
                         <td>${toFinnishDate(invoice.erapaiva)}</td>
                         <td>${invoice.asiakas_nimi}</td>
-                        <td>${formatCurrency(invoice.pricing.total)}</td>
+                        <td>${formatCurrency(Number(invoice.pricing.total) + Number(invoice.pricing.total_alv))}</td>
                         <td>${invoice.paid ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showInvoice(${invoice.lasku_id})">Näytä</button>
@@ -283,7 +284,6 @@
                         <span>${item.tarvike_nimi}</span>
                         <span>${Number(item.maara).toFixed(0)} ${unit}</span>
                         <span>${alennus}</span>
-                        <span>${formatCurrency(item.hankintahinta)}</span>
                         <span>${formatCurrency(myyntihinta)}</span>
                         <span>${formatCurrency(summa)}</span>
                         <span>${formatCurrency(alv)}</span>
@@ -359,9 +359,11 @@
             // Hintaerittely card
             const pricing = invoice.pricing;
             document.getElementById('viewBaseAmount').textContent = formatCurrency(pricing.base_amount);
+            document.getElementById('viewAlvAmount').textContent = formatCurrency(pricing.total_alv);
+            document.getElementById('viewKTAmount').textContent = formatCurrency(pricing.kt_vah);
             document.getElementById('viewLaskutuslisa').textContent = formatCurrency(pricing.laskutuslisa);
             document.getElementById('viewViivastyskorko').textContent = formatCurrency(pricing.viivastyskorko);
-            document.getElementById('viewTotal').textContent = formatCurrency(pricing.total);
+            document.getElementById('viewTotal').textContent = formatCurrency(Number(pricing.total) + Number(pricing.total_alv));
             
             populateSopimuksetDropdown('');
             populatePreviousInvoicesDropdown('');

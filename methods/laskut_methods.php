@@ -9,6 +9,7 @@ switch ($method) {
     case 'GET': // READ
         $suoritus_sql = getSuoritusSumSQL();
         $tarvike_sql = getTarvikeSumSQL();
+        $tarvike_alv_sql = getTarvikeALVSumSQL();
 
         $sql_laskut = "SELECT l.lasku_id,
                               l.sopimus_id,
@@ -21,7 +22,9 @@ switch ($method) {
                               (a.etunimi || ' ' || a.sukunimi) AS asiakas_nimi,
                               a.osoite AS asiakas_osoite,
                               CASE WHEN l.maksupaiva IS NOT NULL THEN true ELSE false END AS paid,
-                              (COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0)) * COALESCE(1.0 / NULLIF(s.osia_laskussa, 0), 1) AS amount
+                              (COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0)) * COALESCE(1.0 / NULLIF(s.osia_laskussa, 0), 1) AS amount,
+                              (COALESCE(tarvike_alv.t_summa_alv, 0) + COALESCE((suoritus_laskenta.s_summa * 0.24), 0)) * COALESCE(1.0 / NULLIF(s.osia_laskussa, 0), 1) AS alv,
+                              (COALESCE(suoritus_laskenta.s_summa, 0) + COALESCE((suoritus_laskenta.s_summa * 0.24), 0)) * COALESCE(1.0 / NULLIF(s.osia_laskussa, 0), 1) AS kt_vahennys
                         FROM Lasku l
                         JOIN Sopimus s ON l.sopimus_id = s.sopimus_id
                         JOIN Tyokohde t ON s.kohde_id = t.kohde_id
@@ -30,6 +33,8 @@ switch ($method) {
                             ON tarvike_laskenta.sopimus_id = s.sopimus_id
                         LEFT JOIN $suoritus_sql AS suoritus_laskenta 
                             ON suoritus_laskenta.sopimus_id = s.sopimus_id
+                        LEFT JOIN $tarvike_alv_sql AS tarvike_alv 
+                            ON tarvike_alv.sopimus_id = s.sopimus_id
                         ORDER BY l.Pvm ASC";
 
         $result_laskut = pg_query($yhteys, $sql_laskut);
@@ -64,24 +69,34 @@ switch ($method) {
                 
                 $base_amount = floatval($row['amount']);
                 
-                // Laskutuslisä 5€
+                // Laskutuslisä 5€ + ensimmäinen eräpäivä
                 $laskutuslisa = 0;
                 $temp_id = $row['edellinen_lasku_id'];
+                $ensimmainen_erapaiva = $row['erapaiva'];
                 while ($temp_id) {
                     $prev = array_filter($laskut_data, function($inv) use ($temp_id) {
                         return $inv['lasku_id'] == $temp_id;
                     });
                     $prev = reset($prev);
-                    if ($prev && !$prev['paid']) {
+                    if ($prev) {
                         $laskutuslisa += 5;
+                        $ensimmainen_erapaiva = $prev['erapaiva'];
+                        $temp_id = $prev['edellinen_lasku_id'];
+                    } else {
+                        $temp_id = null;
                     }
-                    $temp_id = $prev ? $prev['edellinen_lasku_id'] : null;
                 }
                 
-                // Viivästyskorko: 16% jos Karhulasku
+                // Viivästyskorko: 16% vuosikorko, lasketaan ekasta eräpäivästä muistuslaskun päivään
                 $viivastyskorko = 0;
                 if ($invoice_number >= 3) {
-                    $viivastyskorko = $base_amount * 0.16;
+                    $d1 = new DateTime($ensimmainen_erapaiva);
+                    $d2 = new DateTime($row['pvm']);
+                    $paivat = $d1->diff($d2)->days;
+
+                    if ($paivat > 0) {
+                        $viivastyskorko = ($base_amount + $row['alv']) * 0.16 * ($paivat / 365);
+                    }
                 }
                 
                 $total = $base_amount + $laskutuslisa + $viivastyskorko;
@@ -90,7 +105,9 @@ switch ($method) {
                     'base_amount' => $base_amount,
                     'laskutuslisa' => $laskutuslisa,
                     'viivastyskorko' => $viivastyskorko,
-                    'total' => $total
+                    'total' => $total,
+                    'total_alv' => $row['alv'],
+                    'kt_vah' => $row['kt_vahennys']
                 ];
             }
         }
