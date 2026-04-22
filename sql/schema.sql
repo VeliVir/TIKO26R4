@@ -89,6 +89,11 @@ CREATE TABLE Sopimus_suoritus (
     PRIMARY KEY (sopimus_id, suoritus_id)
 );
 
+CREATE TABLE Kayttaja (
+    sahkoposti VARCHAR(50) PRIMARY KEY,
+    salasana VARCHAR(50)
+);
+
 CREATE OR REPLACE FUNCTION paivita_muokattu_sarake()
 RETURNS TRIGGER AS $$
 BEGIN

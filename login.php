@@ -1,4 +1,6 @@
 <?php
+require_once 'db/db_connection.php';
+
 session_start();
 
 $error = '';
@@ -6,18 +8,22 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
-    
-    // Placeholder credentials
-    $valid_username = 'seppo.tarsky@tuni.fi';
-    $valid_password = '1234';
-    
-    if ($username === $valid_username && $password === $valid_password) {
-        $_SESSION['user'] = $username;
-        header('Location: main.php');
-        exit();
-    } else {
-        $error = 'Virheellinen käyttäjänimi tai salasana';
+
+    // Salasanaa ei ole salattu, mutta oikeassa tilanteessa salasana salattaisiin.
+    $sql = "SELECT salasana FROM Kayttaja WHERE sahkoposti = $1";
+    $tulos = pg_query_params($yhteys, $sql, [$username]);
+
+    if ($tulos && pg_num_rows($tulos) > 0) {
+        $kayttaja = pg_fetch_assoc($tulos);
+
+        if ($kayttaja['salasana'] === $password) {
+            $_SESSION['user'] = $username;
+            header('Location: main.php');
+            exit();
+        }
     }
+
+    $error = 'Virheellinen käyttäjänimi tai salasana';
 }
 ?>
 
