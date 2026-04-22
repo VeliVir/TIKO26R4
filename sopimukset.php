@@ -710,7 +710,6 @@
             toggleWorkRow('Urakka');
         }
 
-        // todo asiakkaan lisääminen turhaa koska kohde on suoraan asiakkaalla.
         async function deleteAgreement() {
             if (!activeAgreementId) return;
             const agreement = agreements.find(item => item.sopimus_id == activeAgreementId);
@@ -741,10 +740,8 @@
             if (activeAgreementId) {
                 const agreement = agreements.find(a => a.sopimus_id == activeAgreementId);
                 locationId = agreement.kohde_id;
-                console.log(locationId);
             } else {
                 locationId = document.getElementById('editLocation').value;
-
                 const location = locations.find(l => l.kohde_id == locationId);
                 customerId = location ? location.asiakas_id : null;
             }
@@ -799,10 +796,18 @@
                     })
                 });
                 
-                const result = await response.json(); 
+                const text = await response.text();
+                console.log(text);
+
+                const result = JSON.parse(text);
 
                 if (result.success) {
                     window.location.reload();
+                } else if (result.varastovirhe) {
+                    const lista = result.vajeet.map(v =>
+                        `• ${v.nimi}: varastossa ${v.varastossa}, vaadittu ${v.vaadittu}`
+                    ).join('\n');
+                    alert(`Varastossa ei ole tarpeeksi tarvikkeita:\n\n${lista}`);
                 } else {
                     alert("Tallennus epäonnistui.");
                 }

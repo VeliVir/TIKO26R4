@@ -43,6 +43,7 @@ switch ($method) {
                             t.nimi,
                             t.yksikko,
                             st.maara,
+                            t.varastossa,
                             st.hintatekija,
                             t.hankintahinta,
                             t.hankintahinta * 1.25 AS myyntihinta,
@@ -166,6 +167,18 @@ switch ($method) {
                 // MUOKKAUS
                 $sql_sopimus = "UPDATE Sopimus SET tyyppi = $1, osia_laskussa = $2, kohde_id = $3 WHERE sopimus_id = $4";
                 pg_query_params($yhteys, $sql_sopimus, [$tyyppi, $osia_laskussa, $kohde_id, $sopimus_id]);
+
+                // Palautetaan vanhat tarvikkeet varastoon ennen poistoa
+                $res_vanhat = pg_query_params($yhteys,
+                    "SELECT tarvike_id, maara FROM Sopimus_tarvike WHERE sopimus_id = $1",
+                    [$sopimus_id]
+                );
+                while ($vanha = pg_fetch_assoc($res_vanhat)) {
+                    pg_query_params($yhteys,
+                        "UPDATE Tarvike SET varastossa = varastossa + $1 WHERE tarvike_id = $2",
+                        [(int)$vanha['maara'], $vanha['tarvike_id']]
+                    );
+                }
                 
                 // Tyhjennetään vanhat rivit suoritus ja tarvike liitostauluista
                 pg_query_params($yhteys, "DELETE FROM Sopimus_tarvike WHERE sopimus_id = $1", [$sopimus_id]);
@@ -178,11 +191,42 @@ switch ($method) {
                 $sopimus_id = $row['sopimus_id'];
             }
 
+            // Tarvikkeet + tarkistaa onko varastossa tarpeeksi
             if (!empty($data['tarvikkeet'])) {
+                $vajeet = [];
+
                 foreach ($data['tarvikkeet'] as $t) {
+                    $res = pg_query_params($yhteys, 
+                        "SELECT nimi, varastossa FROM Tarvike WHERE tarvike_id = $1", 
+                        [$t['tarvike_id']]
+                    );
+                    $tarvike = pg_fetch_assoc($res);
+
+                    if ($tarvike['varastossa'] < $t['maara']) {
+                        $vajeet[] = [
+                            'nimi'       => $tarvike['nimi'],
+                            'varastossa' => $tarvike['varastossa'],
+                            'vaadittu'   => $t['maara']
+                        ];
+                    }
                     $hintatekija = 1 - ($t['alennus'] / 100);
                     $sql_t = "INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES ($1, $2, $3, $4)";
                     pg_query_params($yhteys, $sql_t, [$sopimus_id, $t['tarvike_id'], $t['maara'], $hintatekija]);
+                }
+
+                if (!empty($vajeet)) {
+                    pg_query($yhteys, "ROLLBACK");
+                    echo json_encode([
+                        'success'       => false,
+                        'varastovirhe'  => true,
+                        'vajeet'        => $vajeet
+                    ]);
+                    break;
+                }
+
+                foreach ($data['tarvikkeet'] as $t) {
+                    $sql_tarv = "UPDATE Tarvike SET varastossa = varastossa - $1 WHERE tarvike_id = $2";
+                    pg_query_params($yhteys, $sql_tarv, [$t['maara'], $t['tarvike_id']]);
                 }
             }
 
