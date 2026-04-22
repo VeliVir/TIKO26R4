@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS Asiakas CASCADE;
 DROP TABLE IF EXISTS Tarvike CASCADE;
 DROP TABLE IF EXISTS Toimittaja CASCADE;
 DROP TABLE IF EXISTS Suoritus CASCADE;
+DROP TABLE IF EXISTS Kayttaja CASCADE;
 
 CREATE TABLE Asiakas (
     asiakas_id SERIAL PRIMARY KEY,
@@ -183,7 +184,7 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    NEW.hintatekija := NEW.hintatekija * laske_hintatekija_asiakkaalle(v_asiakas_id);
+    NEW.hintatekija := NEW.hintatekija + laske_hintatekija_asiakkaalle(v_asiakas_id) - 1;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -204,7 +205,7 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    NEW.hintatekija := NEW.hintatekija * laske_hintatekija_asiakkaalle(v_asiakas_id);
+    NEW.hintatekija := NEW.hintatekija + laske_hintatekija_asiakkaalle(v_asiakas_id) - 1;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

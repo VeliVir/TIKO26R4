@@ -41,7 +41,7 @@ INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu) VALUES
 (5, 'Tuntihinta', 1, '2026-02-02');
 
 INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu, muokattu) VALUES
-(6, 'Urakka', 1, '2026-02-06', '2026-02-20');
+(6, 'Urakka', 2, '2026-02-06', '2026-02-20');
 
 INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES 
 (1, 1, 1, 1.00),
