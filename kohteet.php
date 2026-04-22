@@ -17,7 +17,7 @@
             </header>
 
             <div class="top-actions">
-                <button type="button" class="button button--primary" onclick="addLocation()">Lisää uusi kohde</button>
+                <button type="button" class="button button--primary admin-only" onclick="addLocation()">Lisää uusi kohde</button>
                 <div class="filter-field">
                     <label for="locationFilter">Suodata</label>
                     <input type="text" id="locationFilter" placeholder="Etsi kohteen nimellä" oninput="filterLocations()">
@@ -68,8 +68,8 @@
                 </div>
 
                 <div class="details-actions" id="detailsActions">
-                    <button class="button button--primary" id="saveLocationBtn" onclick="saveLocation()">Tallenna</button>
-                    <button class="button button--danger" id="deleteLocationBtn" onclick="deleteLocation()" style="display: none;">Poista</button>
+                    <button class="button button--primary admin-only" id="saveLocationBtn" onclick="saveLocation()">Tallenna</button>
+                    <button class="button button--danger admin-only" id="deleteLocationBtn" onclick="deleteLocation()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -98,12 +98,18 @@
                 console.error(e);
                 alert('Yhteysvirhe');
             }
+            applyRoleRestrictions();
         }
 
         init();
 
         let activeLocationId = null;
         let editMode = false;
+
+        function applyRoleRestrictions() {
+            if (IS_ADMIN) return;
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
 
         function renderLocationRows() {
             const tbody = document.querySelector('#locationTable tbody');
@@ -120,7 +126,7 @@
                         <td>${location.asiakas_nimi}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showLocation(${location.kohde_id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editLocation(${location.kohde_id})">Muokkaa</button>
+                            <button class="button button--ghost admin-only" onclick="editLocation(${location.kohde_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -129,6 +135,7 @@
 
         function filterLocations() {
             renderLocationRows();
+            applyRoleRestrictions();
         }
 
         function switchToDetailsView(mode) {

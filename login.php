@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($kayttaja['salasana'] === $password) {
             $_SESSION['user'] = $username;
+            $_SESSION['role'] = $kayttaja['rooli']; 
             header('Location: main.php');
             exit();
         }

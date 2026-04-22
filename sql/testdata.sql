@@ -77,5 +77,7 @@ INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VA
 (4, NULL, '2026-03-01', '2026-03-15', NULL),
 (5, NULL, '2026-03-01', '2026-03-15', NULL);
 
-INSERT INTO Kayttaja (sahkoposti, salasana) VALUES
-('seppo.tarsky@tuni.fi', '1234')
+INSERT INTO Kayttaja (sahkoposti, salasana, rooli) VALUES
+('seppo.tarsky@tuni.fi', '1234', 'admin'),
+('marjatta.tarsky@tuni.fi', '5678', 'admin'),
+('tarkka.tarkastelija@tuni.fi', '0000', 'user')

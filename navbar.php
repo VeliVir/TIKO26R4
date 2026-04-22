@@ -1,3 +1,8 @@
+<?php session_start(); ?>
+<script>
+    const IS_ADMIN = <?= ($_SESSION['role'] ?? 'user') === 'admin' ? 'true' : 'false' ?>;
+</script>
+
 <nav class="navbar">
     <div class="navbar-container">
         <a href="main.php" class="navbar-logo">

@@ -16,8 +16,8 @@
             </header>
 
             <div class="top-actions">
-                <button type="button" class="button button--primary" onclick="addInvoice()">Lisää uusi lasku</button>
-                <button type="button" class="button button--primary" onclick="createReminders()">Luo muistutuslaskut</button>
+                <button type="button" class="button button--primary admin-only" onclick="addInvoice()">Lisää uusi lasku</button>
+                <button type="button" class="button button--primary admin-only" onclick="createReminders()">Luo muistutuslaskut</button>
                 <span id="creation-message" style="font-weight: bold; color: red; font-size: 1.1rem; min-width: 18rem;"></span>
                 <div class="filter-field">
                     <label for="invoiceFilter">Suodata</label>
@@ -130,8 +130,8 @@
                 </div>
 
                 <div class="details-actions" id="detailsActions">
-                    <button class="button button--primary" id="saveInvoiceBtn" onclick="saveInvoice()" style="display: none;">Tallenna</button>
-                    <button class="button button--danger" id="deleteInvoiceBtn" onclick="deleteInvoice()" style="display: none;">Poista</button>
+                    <button class="button button--primary admin-only" id="saveInvoiceBtn" onclick="saveInvoice()" style="display: none;">Tallenna</button>
+                    <button class="button button--danger admin-only" id="deleteInvoiceBtn" onclick="deleteInvoice()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -166,6 +166,12 @@
                 console.error(e);
                 alert('Yhteysvirhe');
             }
+            applyRoleRestrictions();
+        }
+
+        function applyRoleRestrictions() {
+            if (IS_ADMIN) return;
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
         }
 
         function computeDisabledInvoices() {
@@ -216,7 +222,7 @@
                         <td>${invoice.paid ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showInvoice(${invoice.lasku_id})">Näytä</button>
-                            ${disabledInvoiceIds.has(invoice.lasku_id) ? '' : `<button class="button button--ghost" onclick="editInvoice(${invoice.lasku_id})">Muokkaa</button>`}
+                            ${disabledInvoiceIds.has(invoice.lasku_id) ? '' : `<button class="button button--ghost admin-only" onclick="editInvoice(${invoice.lasku_id})">Muokkaa</button>`}
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -225,6 +231,7 @@
 
         function filterInvoices() {
             renderInvoiceRows();
+            applyRoleRestrictions();
         }
 
         function switchToDetailsView(mode) {

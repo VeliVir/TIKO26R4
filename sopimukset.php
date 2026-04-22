@@ -16,7 +16,7 @@
             </header>
 
             <div class="top-actions">
-                <button class="button button--primary" onclick="addAgreement()">Uusi sopimus</button>
+                <button class="button button--primary admin-only" onclick="addAgreement()">Uusi sopimus</button>
                 <div class="filter-field">
                     <label for="agreementFilter">Suodata</label>
                     <input type="text" id="agreementFilter" placeholder="Etsi asiakkaan nimellä" oninput="filterAgreements()">
@@ -170,7 +170,7 @@
                 </div>
 
                 <div class="details-actions" id="detailsActions">
-                    <button class="button button--primary button--large" id="createInvoiceBtn" onclick="createInvoice()">Luo lasku</button>
+                    <button class="button button--primary button--large admin-only" id="createInvoiceBtn" onclick="createInvoice()">Luo lasku</button>
                     <button class="button button--primary" id="saveAgreementBtn" onclick="saveAgreement()" style="display: none;">Tallenna</button>
                     <button class="button button--danger" id="deleteAgreementBtn" onclick="deleteAgreement()" style="display: none;">Poista</button>
                 </div>
@@ -190,23 +190,34 @@
         let isUrakka = true;
 
         async function init() {
-            const res = await fetch('methods/sopimukset_methods.php');
-            const data = await res.json();
+            try {
+                const res = await fetch('methods/sopimukset_methods.php');
+                const data = await res.json();
 
-            if (!data.success) return;
+                if (!data.success) return;
 
-            agreements = data.agreements;
-            customers = data.customers;
-            locations = data.locations;
-            accessories = data.accessories;
-            work = data.work;
-            uniqueAccessories = data.uniqueAccessories;
-            uniqueWorkTypes = data.uniqueWorkTypes;
+                agreements = data.agreements;
+                customers = data.customers;
+                locations = data.locations;
+                accessories = data.accessories;
+                work = data.work;
+                uniqueAccessories = data.uniqueAccessories;
+                uniqueWorkTypes = data.uniqueWorkTypes;
 
-            renderAgreementRows();
+                renderAgreementRows();
+            } catch (e) {
+                console.error(e);
+                alert('Yhteysvirhe');
+            }
+            applyRoleRestrictions();
         }
 
         init();
+
+        function applyRoleRestrictions() {
+            if (IS_ADMIN) return;
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
         
         function formatCurrency(value) {
             return `${parseFloat(value).toFixed(2).replace('.', ',')} €`;
@@ -235,7 +246,7 @@
                         <td>${Number(agreement.laskutettu) ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showAgreement(${agreement.sopimus_id})">Näytä</button>
-                            ${Number(agreement.laskutettu) ? '' : `<button class="button button--ghost" onclick="editAgreement(${agreement.sopimus_id})">Muokkaa</button>`}
+                            ${Number(agreement.laskutettu) ? '' : `<button class="button button--ghost admin-only" onclick="editAgreement(${agreement.sopimus_id})">Muokkaa</button>`}
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -244,6 +255,7 @@
 
         function filterAgreements() {
             renderAgreementRows();
+            applyRoleRestrictions();
         }
 
         function createAccessoryRow(data = { nimi: '', maara: 0, hintatekija: 0 }) {

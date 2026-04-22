@@ -92,7 +92,8 @@ CREATE TABLE Sopimus_suoritus (
 
 CREATE TABLE Kayttaja (
     sahkoposti VARCHAR(50) PRIMARY KEY,
-    salasana VARCHAR(50)
+    salasana VARCHAR(50),
+    rooli VARCHAR(50)
 );
 
 CREATE OR REPLACE FUNCTION paivita_muokattu_sarake()

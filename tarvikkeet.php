@@ -16,7 +16,7 @@
             </header>
 
             <div class="top-actions">
-                <button class="button button--primary" onclick="addAccessory()">Lisää tarvike</button>
+                <button class="button button--primary admin-only" onclick="addAccessory()">Lisää tarvike</button>
                 <div class="filter-field">
                     <label for="accessoryFilter">Suodata</label>
                     <input type="text" id="accessoryFilter" placeholder="Etsi tarvikkeen nimellä" oninput="filterAccessories()">
@@ -145,9 +145,15 @@
             } catch (e) {
                 console.error(e);
             }
+            applyRoleRestrictions();
         }
 
         init();
+
+        function applyRoleRestrictions() {
+            if (IS_ADMIN) return;
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
 
         function formatCurrency(value) {
             return `${parseFloat(value).toFixed(2).replace('.', ',')} €`;
@@ -171,7 +177,7 @@
                         <td>${formatCurrency(item.kokonaishinta)}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showAccessory(${item.tarvike_id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editAccessory(${item.tarvike_id})">Muokkaa</button>
+                            <button class="button button--ghost admin-only" onclick="editAccessory(${item.tarvike_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -180,6 +186,7 @@
 
         function filterAccessories() {
             renderAccessoryRows();
+            applyRoleRestrictions();
         }
 
         function switchToDetailsView(mode) {

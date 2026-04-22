@@ -18,8 +18,8 @@
             </header>
 
             <div class="top-actions">
-                <button class="button button--primary" onclick="addSupplier()">Lisää uusi toimittaja</button>
-                <button class="button button--secondary" onclick="showXmlView()">Lisää tarvikkeita</button>
+                <button class="button button--primary admin-only" onclick="addSupplier()">Lisää uusi toimittaja</button>
+                <button class="button button--secondary admin-only" onclick="showXmlView()">Lisää tarvikkeita</button>
                 <div class="filter-field">
                     <label for="supplierFilter">Suodata</label>
                     <input type="text" id="supplierFilter" placeholder="Etsi toimittajan nimellä" oninput="filterSuppliers()">
@@ -136,9 +136,15 @@
             } catch (e) {
                 console.error(e);
             }
+            applyRoleRestrictions();
         }
 
         init();
+
+        function applyRoleRestrictions() {
+            if (IS_ADMIN) return;
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
 
         function renderSupplierRows() {
             const tbody = document.querySelector('#supplierTable tbody');
@@ -155,7 +161,7 @@
                         <td>${s.tarvike_maara}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showSupplier(${s.toimittaja_id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editSupplier(${s.toimittaja_id})">Muokkaa</button>
+                            <button class="button button--ghost admin-only" onclick="editSupplier(${s.toimittaja_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -164,6 +170,7 @@
 
         function filterSuppliers() {
             renderSupplierRows();
+            applyRoleRestrictions();
         }
 
         function switchToDetailsView(mode) {

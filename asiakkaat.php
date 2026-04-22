@@ -16,7 +16,7 @@
             </header>
 
             <div class="top-actions">
-                <button type="button" class="button button--primary" onclick="addCustomer()">Lisää uusi asiakas</button>
+                <button type="button" class="button button--primary admin-only" onclick="addCustomer()">Lisää uusi asiakas</button>
                 <div class="filter-field">
                     <label for="customerFilter">Suodata</label>
                     <input type="text" id="customerFilter" placeholder="Etsi asiakkaan nimellä" oninput="filterCustomers()">
@@ -79,7 +79,7 @@
                         </table>
                     </div>
                     <div class="location-actions" id="locationActions">
-                        <button class="button button--secondary" onclick="addLocation()">Lisää työkohde</button>
+                        <button class="button button--secondary admin-only" onclick="addLocation()">Lisää työkohde</button>
                     </div>
                 </div>
 
@@ -94,8 +94,8 @@
                 </div>
 
                 <div class="details-actions" id="detailsActions">
-                    <button class="button button--primary" id="saveCustomerBtn" onclick="saveCustomer()">Tallenna</button>
-                    <button class="button button--danger" id="deleteCustomerBtn" onclick="deleteCustomer()" style="display: none;">Poista</button>
+                    <button class="button button--primary admin-only" id="saveCustomerBtn" onclick="saveCustomer()">Tallenna</button>
+                    <button class="button button--danger admin-only" id="deleteCustomerBtn" onclick="deleteCustomer()" style="display: none;">Poista</button>
                 </div>
             </div>
         </div>
@@ -112,7 +112,7 @@
                 const response = await fetch('methods/asiakkaat_methods.php');
                 const data = await response.json();
                 if (!data.success) {
-                    alert('Datan haku epäonnistui: ' + (data.error || ''));
+                    alert('Datan haku epäonnistui: ' + (data.error));
                     return;
                 }
                 customers = data.customers;
@@ -122,9 +122,15 @@
                 console.error(e);
                 alert('Yhteysvirhe');
             }
+            applyRoleRestrictions();
         }
 
         init();
+
+        function applyRoleRestrictions() {
+            if (IS_ADMIN) return;
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
 
         function renderCustomerRows() {
             const tbody = document.querySelector('#customerTable tbody');
@@ -141,7 +147,7 @@
                         <td>${c.sahkoposti || '-'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showCustomer(${c.asiakas_id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editCustomer(${c.asiakas_id})">Muokkaa</button>
+                            <button class="button button--ghost admin-only" onclick="editCustomer(${c.asiakas_id})">Muokkaa</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -150,6 +156,7 @@
 
         function filterCustomers() {
             renderCustomerRows();
+            applyRoleRestrictions();
         }
 
         function switchToDetailsView(mode) {
