@@ -244,8 +244,9 @@ switch ($method) {
             if (!empty($data['tyot'])) {
                 foreach ($data['tyot'] as $tyo) {
                     if ($tyyppi === 'Urakka') {
-                        $sql_w = "INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, urakka_hinta) VALUES ($1, $2, $3)";
-                        pg_query_params($yhteys, $sql_w, [$sopimus_id, $tyo['suoritus_id'], $tyo['urakka_hinta']]);
+                        $hintatekija = 1 + ($tyo['alennus'] / 100);
+                        $sql_w = "INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, urakka_hinta, hintatekija) VALUES ($1, $2, $3, $4)";
+                        pg_query_params($yhteys, $sql_w, [$sopimus_id, $tyo['suoritus_id'], $tyo['urakka_hinta'], $hintatekija]);
                     } else {
                         $hintatekija = 1 + ($tyo['alennus'] / 100);
                         $sql_w = "INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija) VALUES ($1, $2, $3, $4)";

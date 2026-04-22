@@ -159,11 +159,6 @@
                             </div>
                             <div class="panel-section" id="urakkaWorkPanel">
                                 <h3>Työsuoritus</h3>
-                                <div class="details-row details-field-header">
-                                    <span></span>
-                                    <span>Työ</span>
-                                    <span>Määrä</span>
-                                </div>
                                 <div id="urakkaWorkRows"></div>
                             </div>
                         </div>
@@ -283,27 +278,37 @@
         function createWorkRow(data = { nimi: '', tyomaara_tunneilla: 1, hintatekija: 1 }) {
             const row = document.createElement('div');
             row.className = 'details-row work-row';
-            
-            row.innerHTML = `
-                <select class="work-type" style="flex: 1;">
-                    <option value="">Valitse työ</option>
-                </select>
-                <input type="number" class="work-quantity hourly-field" placeholder="Määrä" 
-                    style="display: ${isUrakka ? 'none' : 'block'}; flex: 1;" 
-                    value="${Number(data.tyomaara_tunneilla || 0)}">
-                <input type="number" class="work-factor hourly-field" placeholder="Hintamuutos %"
-                    style="display: ${isUrakka ? 'none' : 'block'}; flex: 1;" 
-                    max="0"
-                    value="${data.hintatekija != null ? ((data.hintatekija - 1) * 100).toFixed(0) : 0}">
-                <input type="number" class="work-price urakka-field" placeholder="Summa (ALV 0%)" 
-                    style="display: ${isUrakka ? 'block' : 'none'}; flex: 1;" 
-                    value="${data.urakka_hinta || 0}">
-                <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
-            `;
-            
-            const select = row.querySelector('.work-type')
-            const workTypeHint = isUrakka ? 'Urakka' : data.nimi;
-            populateWorkDropdown(select, workTypeHint);
+
+            if (isUrakka) {
+                const urakkaType = uniqueWorkTypes.find(w => w.nimi === 'Urakka');
+                row.innerHTML = `
+                    <input type="hidden" class="work-type" value="${urakkaType ? urakkaType.suoritus_id : ''}">
+                    <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+                        <label>Urakan hinta</label>
+                        <input type="number" class="work-price" min="0" step="0.01"
+                            value="${data.urakka_hinta || 0}">
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+                        <label>Hintamuutos %</label>
+                        <input type="number" class="work-discount" max="0" step="1"
+                            value="${data.hintatekija != null ? ((data.hintatekija - 1) * 100).toFixed(0) : 0}">
+                    </div>
+                    <button type="button" class="button button--ghost" onclick="removeRow(this)" style="align-self:flex-end;">Poista</button>
+                `;
+            } else {
+                row.innerHTML = `
+                    <select class="work-type" style="flex: 1;">
+                        <option value="">Valitse työ</option>
+                    </select>
+                    <input type="number" class="work-quantity" placeholder="Määrä" style="flex: 1;"
+                        value="${Number(data.tyomaara_tunneilla || 0)}">
+                    <input type="number" class="work-factor" placeholder="Hintamuutos %" max="0" step="1" style="flex: 1;"
+                        value="${data.hintatekija != null ? ((data.hintatekija - 1) * 100).toFixed(0) : 0}">
+                    <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
+                `;
+                const select = row.querySelector('.work-type');
+                populateWorkDropdown(select, data.nimi);
+            }
 
             return row;
         }
@@ -792,17 +797,19 @@
 
             const containerId = type === 'Urakka' ? '#urakkaWorkRows' : '#workRows';
             const workData = Array.from(document.querySelectorAll(`${containerId} .work-row`)).map(row => {
-                const select = row.querySelector('.work-type');
+                const typeInput = row.querySelector('.work-type');
                 const isUrakka2 = type === 'Urakka';
 
                 return {
-                    suoritus_id: select.value,
+                    suoritus_id: typeInput.value,
                     maara: isUrakka2 ? 0 : row.querySelector('.work-quantity').value,
-                    alennus: isUrakka2 ? 0 : Math.min(0, row.querySelector('.work-factor').value),
+                    alennus: isUrakka2
+                        ? Math.min(0, parseFloat(row.querySelector('.work-discount')?.value || 0))
+                        : Math.min(0, parseFloat(row.querySelector('.work-factor').value)),
                     urakka_hinta: isUrakka2 ? row.querySelector('.work-price').value : 0
                 };
             }).filter(item => {
-                if (item.suoritus_id === "") return false;
+                if (!item.suoritus_id) return false;
                 if (type === 'Urakka') return item.urakka_hinta > 0;
                 return item.maara > 0;
             });
