@@ -327,7 +327,7 @@
                             <span>${formatCurrency(urakkaHinta)}</span>
                             <span>${hintamuutos}</span>
                             <span>${formatCurrency(urakkaHinta * 0.24)}</span>
-                            <span>${formatCurrency(urakkaHinta * 1.24 * Number(hintamuutos))}</span>
+                            <span>${formatCurrency(urakkaHinta * 1.24)}</span>
                         `;
                         workList.appendChild(workDiv);
                     });
