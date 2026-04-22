@@ -201,7 +201,7 @@ switch ($method) {
 
                 foreach ($data['tarvikkeet'] as $t) {
                     $res = pg_query_params($yhteys, 
-                        "SELECT nimi, varastossa FROM Tarvike WHERE tarvike_id = $1", 
+                        "SELECT nimi, varastossa FROM Tarvike WHERE tarvike_id = $1 FOR UPDATE", 
                         [$t['tarvike_id']]
                     );
                     $tarvike = pg_fetch_assoc($res);

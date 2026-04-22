@@ -197,7 +197,8 @@ switch ($method) {
             $r_existing = pg_query_params($yhteys,
                 "SELECT tarvike_id, nimi, merkki, hankintahinta, yksikko, varastossa, alv
                  FROM Tarvike
-                 WHERE nimi = $1 AND toimittaja_id = $2 AND poistettu IS NULL",
+                 WHERE nimi = $1 AND toimittaja_id = $2 AND poistettu IS NULL
+                 FOR UPDATE",
                 [$nimi, $toimittaja_id]);
 
             if (!$r_existing) {

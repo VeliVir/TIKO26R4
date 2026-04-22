@@ -188,6 +188,7 @@
             document.getElementById('viewEmail').textContent = c.sahkoposti || '-';
             document.getElementById('viewAddress').textContent = c.osoite || '-';
             renderLocations(locations);
+            document.querySelector('.details-card.full-width').style.display = '';
         }
 
         function editCustomer(id) {
@@ -202,6 +203,7 @@
             document.getElementById('editEmail').value = c.sahkoposti || '';
             document.getElementById('editAddress').value = c.osoite || '';
             renderLocations(locations);
+            document.querySelector('.details-card.full-width').style.display = '';
         }
 
         function addCustomer() {
@@ -214,6 +216,7 @@
             document.getElementById('editEmail').value = '';
             document.getElementById('editAddress').value = '';
             renderLocations([]);
+            document.querySelector('.details-card.full-width').style.display = 'none';
         }
 
         async function deleteCustomer() {
