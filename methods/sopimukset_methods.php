@@ -209,7 +209,7 @@ switch ($method) {
                             'vaadittu'   => $t['maara']
                         ];
                     }
-                    $hintatekija = 1 - ($t['alennus'] / 100);
+                    $hintatekija = 1 + ($t['alennus'] / 100);
                     $sql_t = "INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES ($1, $2, $3, $4)";
                     pg_query_params($yhteys, $sql_t, [$sopimus_id, $t['tarvike_id'], $t['maara'], $hintatekija]);
                 }
@@ -236,7 +236,7 @@ switch ($method) {
                         $sql_w = "INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, urakka_hinta) VALUES ($1, $2, $3)";
                         pg_query_params($yhteys, $sql_w, [$sopimus_id, $tyo['suoritus_id'], $tyo['urakka_hinta']]);
                     } else {
-                        $hintatekija = 1 - ($tyo['alennus'] / 100);
+                        $hintatekija = 1 + ($tyo['alennus'] / 100);
                         $sql_w = "INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija) VALUES ($1, $2, $3, $4)";
                         pg_query_params($yhteys, $sql_w, [$sopimus_id, $tyo['suoritus_id'], $tyo['maara'], $hintatekija]);
                     }

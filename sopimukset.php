@@ -66,7 +66,7 @@
                     <div class="details-row details-field-header">
                         <span>Tarvike</span>
                         <span>Määrä</span>
-                        <span>Alennus %</span>
+                        <span>Hintamuutos %</span>
                         <span>Ostohinta</span>
                         <span>Myyntihinta</span>
                         <span>Summa (Ilman ALV)</span>
@@ -81,7 +81,7 @@
                     <div class="details-row details-field-header">
                         <span>Työ</span>
                         <span>Määrä</span>
-                        <span>Alennus %</span>
+                        <span>Hintamuutos %</span>
                         <span>Hinta (Ilman ALV ja alennuksia)</span>
                         <span>Hinta (Ilman ALV)</span>
                         <span>ALV</span>
@@ -95,6 +95,7 @@
                     <div class="details-row details-field-header">
                         <span>Työ</span>
                         <span>Hinta (Ilman ALV)</span>
+                        <span>Hintamuutos %</span>
                         <span>ALV</span>
                         <span>Loppuhinta</span>
                     </div>
@@ -135,7 +136,7 @@
                                     <span></span>
                                     <span>Tarvike</span>
                                     <span>Määrä</span>
-                                    <span>Alennus %</span>
+                                    <span>Hintamuutos %</span>
                                 </div>
                                 <div id="accessoryRows"></div>
                                 <button class="button button--secondary" onclick="addAccessoryRow()">Lisää rivi</button>
@@ -147,7 +148,7 @@
                                     <span></span>
                                     <span>Työ</span>
                                     <span>Määrä</span>
-                                    <span>Alennus %</span>
+                                    <span>Hintamuutos %</span>
                                 </div>
                                 <div id="workRows"></div>
                                 <button id="addWorkRowBtn" class="button button--secondary" onclick="addWorkRow()">Lisää rivi</button>
@@ -253,7 +254,7 @@
                     <option value="">Valitse tarvike</option>
                 </select>
                 <input type="number" class="accessory-quantity" min="0" step="1" value="${Number(data.maara).toFixed(0)}">
-                <input type="number" class="accessory-factor" min="0" step="1" value="${data.hintatekija ? ((1 - data.hintatekija) * 100).toFixed(0) : 0}">
+                <input type="number" class="accessory-factor" max="0" step="1" value="${data.hintatekija ? ((data.hintatekija - 1) * 100).toFixed(0) : 0}">
                 <button type="button" class="button button--ghost" onclick="removeRow(this)">Poista</button>
             `;
 
@@ -274,9 +275,10 @@
                 <input type="number" class="work-quantity hourly-field" placeholder="Määrä" 
                     style="display: ${isUrakka ? 'none' : 'block'}; flex: 1;" 
                     value="${Number(data.tyomaara_tunneilla || 0)}">
-                <input type="number" class="work-factor hourly-field" placeholder="Alennus %" 
+                <input type="number" class="work-factor hourly-field" placeholder="Hintamuutos %"
                     style="display: ${isUrakka ? 'none' : 'block'}; flex: 1;" 
-                    value="${data.hintatekija ? ((1 - data.hintatekija) * 100).toFixed(0) : 0}">
+                    max="0"
+                    value="${data.hintatekija != null ? ((data.hintatekija - 1) * 100).toFixed(0) : 0}">
                 <input type="number" class="work-price urakka-field" placeholder="Summa (ALV 0%)" 
                     style="display: ${isUrakka ? 'block' : 'none'}; flex: 1;" 
                     value="${data.urakka_hinta || 0}">
@@ -626,10 +628,10 @@
                 <span>${Number(item.maara).toFixed(0)} ${item.yksikko === 'metri' ? 'm' : (item.yksikko || 'kpl')}</span>
                 <span>${
                     item.hintatekija == 1
-                        ? 'Ei alennusta'
-                        : item.hintatekija !== undefined && item.hintatekija !== null
-                            ? ((1 - item.hintatekija) * 100).toFixed(0) + ' %'
-                            : ''
+                        ? 'Ei muutosta'
+                        : item.hintatekija < 1
+                            ? `-${((1 - item.hintatekija) * 100).toFixed(0)} %`
+                            : `+${((item.hintatekija - 1) * 100).toFixed(0)} %`
                 }</span>
                 <span>${formatCurrency(item.hankintahinta)}</span>
                 <span>${formatCurrency(item.myyntihinta)}</span>
@@ -648,10 +650,10 @@
                         <span>${Number(amount).toFixed(0)}${unit}</span>
                         <span>${
                             item.hintatekija == 1
-                                ? 'Ei alennusta'
-                                : item.hintatekija !== undefined && item.hintatekija !== null
-                                    ? ((1 - item.hintatekija) * 100).toFixed(0) + ' %'
-                                    : ''
+                                ? 'Ei muutosta'
+                                : item.hintatekija < 1
+                                    ? `-${((1 - item.hintatekija) * 100).toFixed(0)} %`
+                                    : `+${((item.hintatekija - 1) * 100).toFixed(0)} %`
                         }</span>
                         <span>${formatCurrency(Number(item.hinta) / 1.24 * Number(amount))}</span>
                         <span>${formatCurrency(Number(item.hinta) / 1.24 * Number(amount) * Number(item.hintatekija))}</span>
@@ -664,8 +666,15 @@
                     return`
                         <span>${item.nimi}</span>
                         <span>${formatCurrency(item.urakka_hinta)}</span>
+                        <span>${
+                            item.hintatekija == 1
+                                ? 'Ei muutosta'
+                                : item.hintatekija < 1
+                                    ? `-${((1 - item.hintatekija) * 100).toFixed(0)} %`
+                                    : `+${((item.hintatekija - 1) * 100).toFixed(0)} %`
+                        }</span>
                         <span>${formatCurrency(Number(item.urakka_hinta) * 0.24)}</span>
-                        <span>${formatCurrency(Number(item.urakka_hinta) * 0.24 + Number(item.urakka_hinta))}</span>
+                        <span>${formatCurrency(Number(item.urakka_hinta) * 0.24 + Number(item.urakka_hinta) * Number(item.hintatekija))}</span>
                 `});
             }
         }
@@ -756,7 +765,7 @@
                 return {
                     tarvike_id: select.value,
                     maara: row.querySelector('.accessory-quantity').value,
-                    alennus: row.querySelector('.accessory-factor').value 
+                    alennus: Math.min(0, row.querySelector('.accessory-factor').value)
                 };
             }).filter(item => item.tarvike_id !== "" && item.maara > 0);
 
@@ -768,7 +777,7 @@
                 return {
                     suoritus_id: select.value,
                     maara: isUrakka2 ? 0 : row.querySelector('.work-quantity').value,
-                    alennus: isUrakka2 ? 0 : row.querySelector('.work-factor').value,
+                    alennus: isUrakka2 ? 0 : Math.min(0, row.querySelector('.work-factor').value),
                     urakka_hinta: isUrakka2 ? row.querySelector('.work-price').value : 0
                 };
             }).filter(item => {
