@@ -387,6 +387,7 @@
             const invoice = invoices.find(item => Number(item.lasku_id) === Number(id));
             if (!invoice || disabledInvoiceIds.has(id)) return;
             activeInvoiceId = id;
+            showInvoice(id);
             switchToDetailsView('edit');
             document.getElementById('detailsTitle').textContent = `Muokkaa laskua: ${invoice.asiakas_nimi}`;
             
