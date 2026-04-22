@@ -55,7 +55,11 @@
                     <div class="details-row"><span>Luontipäivämäärä</span><span id="viewCreated"></span></div>
                     <div class="details-row"><span>Viimeksi muokattu</span><span id="viewUpdated"></span></div>
                     <div class="details-row"><span>Työkohde</span><span id="viewLocation"></span></div>
+                    <div class="details-row"><span>Kohteen osoite</span><span id="viewAddress"></span></div>
                     <div class="details-row"><span>Asiakas</span><span id="viewCustomer"></span></div>
+                    <div class="details-row"><span>Asiakkaan osoite</span><span id="viewCustomerAddress"></span></div>
+                    <div class="details-row"><span>Sähköposti</span><span id="viewEmail"></span></div>
+                    <div class="details-row"><span>Puhelin</span><span id="viewPhone"></span></div>
                     <div class="details-row"><span>Summa (Ilman ALV)</span><span id="viewAmount"></span></div>
                     <div class="details-row"><span>Summa (ALV)</span><span id="viewAmountALV"></span></div>
                     <div class="details-row"><span>Laskutettu</span><span id="viewBilled"></span></div>
@@ -624,7 +628,11 @@
             document.getElementById('viewCreated').textContent = new Date(agreement.luotu).toLocaleString('fi-FI');
             document.getElementById('viewUpdated').textContent = new Date(agreement.muokattu || agreement.luotu).toLocaleString('fi-FI');
             document.getElementById('viewLocation').textContent = agreement.kohde_nimi;
+            document.getElementById('viewAddress').textContent = agreement.osoite || '-';
             document.getElementById('viewCustomer').textContent = agreement.asiakas_nimi;
+            document.getElementById('viewEmail').textContent = agreement.sahkoposti || '-';
+            document.getElementById('viewPhone').textContent = agreement.puhelinnro || '-';
+            document.getElementById('viewCustomerAddress').textContent = agreement.a_osoite || '-';
             document.getElementById('viewAmount').textContent = formatCurrency(agreement.kokonaishinta);
             document.getElementById('viewAmountALV').textContent = formatCurrency(agreement.alv) 
                                                                                   + ' -> Yhteensä: '

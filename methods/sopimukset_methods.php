@@ -110,6 +110,10 @@ switch ($method) {
                 DATE(s.muokattu) AS muokattu,
                 t.nimi AS kohde_nimi,
                 a.etunimi || ' ' || a.sukunimi AS asiakas_nimi,
+                a.sahkoposti,
+                a.puhelinnro,
+                t.osoite,
+                a.osoite AS a_osoite,
                 (COALESCE(tarvike_laskenta.t_summa, 0) + COALESCE(suoritus_laskenta.s_summa, 0)) AS kokonaishinta,
                 (COALESCE(tarvike_alv.t_summa_alv, 0)  
                 + COALESCE((suoritus_laskenta.s_summa * 0.24), 0)) AS alv,
