@@ -37,31 +37,44 @@ switch ($method) {
         break;
 
     case 'POST': // CREATE
+        pg_query($yhteys, "BEGIN");
         $sql = "INSERT INTO Tyokohde (nimi, osoite, asiakas_id)
                 VALUES ($1, $2, $3)";
-        pg_query_params($yhteys, $sql, [
+        $result = pg_query_params($yhteys, $sql, [
             $data['nimi'],
             $data['osoite'],
             $data['asiakas_id']
         ]);
-        echo json_encode(['success' => true]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'PUT': // UPDATE
+        pg_query($yhteys, "BEGIN");
         $sql = "UPDATE Tyokohde
                 SET nimi = $1,
                     osoite = $2,
                     asiakas_id = $3,
                     muokattu = CURRENT_TIMESTAMP
                 WHERE kohde_id = $4";
-
-        pg_query_params($yhteys, $sql, [
+        $result = pg_query_params($yhteys, $sql, [
             $data['nimi'],
             $data['osoite'],
             $data['asiakas_id'],
             $data['kohde_id']
         ]);
-        echo json_encode(['success' => true]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'DELETE':

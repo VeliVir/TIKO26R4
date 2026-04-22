@@ -182,16 +182,23 @@ switch ($method) {
 
     
     case 'POST': // CREATE
+        pg_query($yhteys, "BEGIN");
         $sql = "INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, pvm, erapaiva, maksupaiva)
                 VALUES ($1, $2, $3, $4, $5)";
-        pg_query_params($yhteys, $sql, [
+        $result = pg_query_params($yhteys, $sql, [
             $data['sopimus_id'],
             $data['edellinen_lasku_id'] ?? null,
             $data['pvm'],
             $data['erapaiva'],
             $data['maksupaiva'] ?? null
         ]);
-        echo json_encode(['success' => true]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'PUT': // UPDATE

@@ -44,6 +44,7 @@ switch ($method) {
         break;
 
     case 'POST':
+        pg_query($yhteys, "BEGIN");
         $sql = "INSERT INTO Asiakas (etunimi, sukunimi, puhelinnro, sahkoposti, osoite)
                 VALUES ($1, $2, $3, $4, $5)";
         $result = pg_query_params($yhteys, $sql, [
@@ -53,11 +54,19 @@ switch ($method) {
             $data['sahkoposti'],
             $data['osoite'] ?? null
         ]);
-        ob_clean();
-        echo json_encode(['success' => (bool)$result]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            ob_clean();
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'PUT':
+        pg_query($yhteys, "BEGIN");
         $sql = "UPDATE Asiakas
                 SET etunimi = $1,
                     sukunimi = $2,
@@ -74,8 +83,15 @@ switch ($method) {
             $data['osoite'] ?? null,
             $data['asiakas_id']
         ]);
-        ob_clean();
-        echo json_encode(['success' => (bool)$result]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            ob_clean();
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'DELETE':

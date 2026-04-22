@@ -229,8 +229,15 @@ switch ($method) {
                 }
 
                 foreach ($data['tarvikkeet'] as $t) {
-                    $sql_tarv = "UPDATE Tarvike SET varastossa = varastossa - $1 WHERE tarvike_id = $2";
-                    pg_query_params($yhteys, $sql_tarv, [$t['maara'], $t['tarvike_id']]);
+                    $res_upd = pg_query_params($yhteys,
+                        "UPDATE Tarvike SET varastossa = varastossa - $1 WHERE tarvike_id = $2 AND varastossa >= $1",
+                        [$t['maara'], $t['tarvike_id']]
+                    );
+                    if (!$res_upd || pg_affected_rows($res_upd) === 0) {
+                        pg_query($yhteys, "ROLLBACK");
+                        echo json_encode(['success' => false, 'varastovirhe' => true, 'vajeet' => []]);
+                        break 2;
+                    }
                 }
             }
 

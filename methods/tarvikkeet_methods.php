@@ -84,6 +84,7 @@ switch ($method) {
         break;
 
     case 'POST':
+        pg_query($yhteys, "BEGIN");
         $alv = 1 + ($data['alv_prosentti'] / 100);
         $sql = "INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa, alv)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)";
@@ -96,12 +97,20 @@ switch ($method) {
             $data['varastossa'] ?? 0,
             $alv
         ]);
-        ob_clean();
-        echo json_encode(['success' => (bool)$result]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            ob_clean();
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'PUT':
         // muokattu is updated automatically by the DB trigger trg_paivita_muokattu_tarvike
+        pg_query($yhteys, "BEGIN");
         $alv = 1 + ($data['alv_prosentti'] / 100);
         $sql = "UPDATE Tarvike
                 SET toimittaja_id = $1,
@@ -122,16 +131,31 @@ switch ($method) {
             $alv,
             $data['tarvike_id']
         ]);
-        ob_clean();
-        echo json_encode(['success' => (bool)$result]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            ob_clean();
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'DELETE':
+        pg_query($yhteys, "BEGIN");
         $result = pg_query_params($yhteys,
             "UPDATE Tarvike SET poistettu = CURRENT_TIMESTAMP WHERE tarvike_id = $1",
             [$data['tarvike_id']]);
-        ob_clean();
-        echo json_encode(['success' => (bool)$result]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            ob_clean();
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'XML_IMPORT':
@@ -151,15 +175,18 @@ switch ($method) {
             break;
         }
 
+        pg_query($yhteys, "BEGIN");
+
         // --- Resolve supplier ---
         $toim_nimi   = trim((string)$xml->toimittaja->toim_nimi);
         $toim_osoite = trim((string)$xml->toimittaja->osoite);
 
         $r_toim = pg_query_params($yhteys,
-            "SELECT toimittaja_id FROM Toimittaja WHERE nimi = $1",
+            "SELECT toimittaja_id FROM Toimittaja WHERE nimi = $1 FOR UPDATE",
             [$toim_nimi]);
 
         if (!$r_toim) {
+            pg_query($yhteys, "ROLLBACK");
             ob_clean();
             echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
             break;
@@ -173,6 +200,7 @@ switch ($method) {
                 "INSERT INTO Toimittaja (nimi, osoite) VALUES ($1, $2) RETURNING toimittaja_id",
                 [$toim_nimi, $toim_osoite ?: null]);
             if (!$r_ins) {
+                pg_query($yhteys, "ROLLBACK");
                 ob_clean();
                 echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
                 break;
@@ -202,6 +230,7 @@ switch ($method) {
                 [$nimi, $toimittaja_id]);
 
             if (!$r_existing) {
+                pg_query($yhteys, "ROLLBACK");
                 ob_clean();
                 echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
                 break 2;
@@ -211,10 +240,16 @@ switch ($method) {
 
             if (!$existing) {
                 // Brand-new item — insert with DB-default alv (1.24)
-                pg_query_params($yhteys,
+                $ok = pg_query_params($yhteys,
                     "INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa)
                      VALUES ($1, $2, $3, $4, $5, 0)",
                     [$toimittaja_id, $nimi, $merkki ?: null, $yksikko ?: null, $hinta]);
+                if (!$ok) {
+                    pg_query($yhteys, "ROLLBACK");
+                    ob_clean();
+                    echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+                    break 2;
+                }
                 $inserted++;
             } else {
                 // Compare key fields — ignore tyyppi (not in DB schema)
@@ -227,12 +262,19 @@ switch ($method) {
 
                 if ($changed) {
                     // Move old record to history by setting poistettu
-                    pg_query_params($yhteys,
+                    $ok = pg_query_params($yhteys,
                         "UPDATE Tarvike SET poistettu = CURRENT_TIMESTAMP WHERE tarvike_id = $1",
                         [$existing['tarvike_id']]);
 
+                    if (!$ok) {
+                        pg_query($yhteys, "ROLLBACK");
+                        ob_clean();
+                        echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+                        break 2;
+                    }
+
                     // Insert updated record, preserving stock count and alv from old row
-                    pg_query_params($yhteys,
+                    $ok = pg_query_params($yhteys,
                         "INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa, alv)
                          VALUES ($1, $2, $3, $4, $5, $6, $7)",
                         [
@@ -244,6 +286,12 @@ switch ($method) {
                             (int)$existing['varastossa'],
                             $existing['alv']
                         ]);
+                    if (!$ok) {
+                        pg_query($yhteys, "ROLLBACK");
+                        ob_clean();
+                        echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+                        break 2;
+                    }
                     $updated++;
                 } else {
                     $unchanged++;
@@ -251,6 +299,7 @@ switch ($method) {
             }
         }
 
+        pg_query($yhteys, "COMMIT");
         ob_clean();
         echo json_encode([
             'success'   => true,

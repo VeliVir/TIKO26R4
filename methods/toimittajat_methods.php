@@ -55,31 +55,48 @@ switch ($method) {
         break;
 
     case 'POST':
+        pg_query($yhteys, "BEGIN");
         $sql = "INSERT INTO Toimittaja (nimi, osoite) VALUES ($1, $2)";
-        pg_query_params($yhteys, $sql, [
+        $result = pg_query_params($yhteys, $sql, [
             $data['nimi'],
             $data['osoite'] ?? null
         ]);
-        echo json_encode(['success' => true]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'PUT':
+        pg_query($yhteys, "BEGIN");
         $sql = "UPDATE Toimittaja SET nimi = $1, osoite = $2 WHERE toimittaja_id = $3";
-        pg_query_params($yhteys, $sql, [
+        $result = pg_query_params($yhteys, $sql, [
             $data['nimi'],
             $data['osoite'] ?? null,
             $data['toimittaja_id']
         ]);
-        echo json_encode(['success' => true]);
+        if ($result) {
+            pg_query($yhteys, "COMMIT");
+            echo json_encode(['success' => true]);
+        } else {
+            pg_query($yhteys, "ROLLBACK");
+            echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+        }
         break;
 
     case 'DELETE':
+        pg_query($yhteys, "BEGIN");
         $result = pg_query_params($yhteys,
             "DELETE FROM Toimittaja WHERE toimittaja_id = $1",
             [$data['toimittaja_id']]);
         if ($result) {
+            pg_query($yhteys, "COMMIT");
             echo json_encode(['success' => true]);
         } else {
+            pg_query($yhteys, "ROLLBACK");
             echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
         }
         break;
