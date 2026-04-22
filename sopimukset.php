@@ -235,7 +235,7 @@
                         <td>${Number(agreement.laskutettu) ? 'Kyllä' : 'Ei'}</td>
                         <td class="actions-cell">
                             <button class="button button--secondary" onclick="showAgreement(${agreement.sopimus_id})">Näytä</button>
-                            <button class="button button--ghost" onclick="editAgreement(${agreement.sopimus_id})">Muokkaa</button>
+                            ${Number(agreement.laskutettu) ? '' : `<button class="button button--ghost" onclick="editAgreement(${agreement.sopimus_id})">Muokkaa</button>`}
                         </td>
                     `;
                     tbody.appendChild(row);
