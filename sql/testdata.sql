@@ -8,7 +8,8 @@ INSERT INTO Asiakas (etunimi, sukunimi, osoite, puhelinnro, sahkoposti) VALUES
 ('Jaska', 'Hosunen', 'Mesikuja 10, Susimetsä', '040 123 4567', 'jaska.hosunen@gmail.com'),
 ('Lissu', 'Jokinen', 'Nurmitie 5, Aitolahti', '050 987 6543', 'lissu.jokinen@hotmail.com'),
 ('Masa', 'Näsänen', 'Masalantie 12, Kangasala', '044 321 7689', 'masa.nasanen@tuni.fi'),
-('Presidentti', 'Niinistö', 'Mariankatu 2, Helsinki', '010 123 4567', 'presidentti.niinisto@gmail.com');
+('Presidentti', 'Niinistö', 'Mariankatu 2, Helsinki', '010 123 4567', 'presidentti.niinisto@gmail.com'),
+('Vel', 'Kainen', 'Tikankuja 5, Kouvola', '010 132 3567', 'vel.kainen@gmail.com');
 
 INSERT INTO Tyokohde (asiakas_id, nimi, osoite) VALUES 
 (1, 'Susimetsän asunto', 'Mesikuja 10, Susimetsä'),
@@ -16,7 +17,9 @@ INSERT INTO Tyokohde (asiakas_id, nimi, osoite) VALUES
 (2, 'Huitsinnevan toimisto', 'Kasinopolku 11, Huitsinneva'),
 (3, 'Puotonkorven tehdas', 'Puotonkorventie 1, Puotonkorpi'),
 (3, 'Masalantien asunto', 'Masalantie 12, Kangasala'),
-(4, 'Presidentinlinna', 'Mariankatu 2, Helsinki');
+(4, 'Presidentinlinna', 'Mariankatu 2, Helsinki'),
+(5, 'Puumaja', 'Kouvolan metsä, Kouvola'),
+(5, 'Puumaja 2', 'Kouvolan metsä, Kouvola');
 
 INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa, alv) VALUES 
 (1, 'USB-kaapeli', 'Deltaco', 'kpl', 4.00, 24, DEFAULT),
@@ -25,7 +28,8 @@ INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varast
 (2, 'Pistorasia', 'Jussi', 'kpl', 10.00, 10, DEFAULT),
 (2, 'Maakaapeli', 'Kaapelsson', 'm', 4.00, 300, DEFAULT),
 (4, 'Sähkökeskus', 'Junker', 'kpl', 300.00, 3, DEFAULT),
-(4, 'Palohälytin', 'Incendium', 'kpl', 4.00, 15, DEFAULT);
+(4, 'Palohälytin', 'Incendium', 'kpl', 4.00, 15, DEFAULT),
+(4, 'Häkähälytin', 'Incendium', 'kpl', 6.00, 0, DEFAULT);
 
 INSERT INTO Suoritus (nimi, hinta) VALUES 
 ('Urakka', NULL),
@@ -38,7 +42,9 @@ INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu) VALUES
 (2, 'Tuntihinta', 1, '2026-01-02'),
 (4, 'Tuntihinta', 1, '2026-01-03'),
 (3, 'Urakka', 1, '2026-02-01'),
-(5, 'Tuntihinta', 1, '2026-02-02');
+(5, 'Tuntihinta', 1, '2026-02-02'),
+(7, 'Tuntihinta', 1, '2026-01-02'),
+(8, 'Urakka', 1, '2026-04-02');
 
 INSERT INTO Sopimus (kohde_id, tyyppi, osia_laskussa, luotu, muokattu) VALUES
 (6, 'Urakka', 2, '2026-02-06', '2026-02-20');
@@ -52,7 +58,8 @@ INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES
 (3, 6, 1, 0.95),
 (4, 7, 2, 1.00),
 (5, 2, 3, 1.00), 
-(5, 4, 1, 1.00);
+(5, 4, 1, 1.00),
+(6, 7, 2, 1.00);
 
 INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija, urakka_hinta) VALUES 
 (1, 1, NULL, 1.00, 100.00),
@@ -64,7 +71,9 @@ INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hinta
 (4, 1, NULL, 1.00, 50.00),
 (5, 2, 3, 1.00, NULL),
 (5, 3, 12, 1.00, NULL),
-(6, 1, NULL, 1.00, 5004.21);
+(8, 1, NULL, 1.00, 5004.21),
+(6, 2, 2, 1.00, NULL),
+(6, 3, 15, 0.85, NULL);
 
 INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VALUES 
 (1, NULL, '2025-10-01', '2025-10-15', '2025-12-01'),
@@ -75,9 +84,21 @@ INSERT INTO Lasku (sopimus_id, edellinen_lasku_id, Pvm, erapaiva, maksupaiva) VA
 (3, 5, '2026-02-15', '2026-03-01', NULL),
 (3, 6, '2026-03-05', '2026-03-20', NULL),
 (4, NULL, '2026-03-01', '2026-03-15', NULL),
-(5, NULL, '2026-03-01', '2026-03-15', NULL);
+(5, NULL, '2026-03-01', '2026-03-15', NULL),
+(6, NULL, '2026-01-05', '2026-01-20', NULL),
+(6, 10, '2026-01-21', '2026-02-05', NULL),
+(6, 11, '2026-02-06', '2026-02-21', NULL),
+(6, 12, '2026-02-22', '2026-03-09', NULL);
+
+-- Nämä täällä jotta ne näyttäisi 30 % hinnan korotuksen :)
+INSERT INTO Sopimus_tarvike (sopimus_id, tarvike_id, maara, hintatekija) VALUES 
+(7, 2, 3, 1.00),
+(7, 5, 5, 0.90);  
+
+INSERT INTO Sopimus_suoritus (sopimus_id, suoritus_id, tyomaara_tunneilla, hintatekija, urakka_hinta) VALUES 
+(7, 1, NULL, 1.00, 200.00);
 
 INSERT INTO Kayttaja (sahkoposti, salasana, rooli) VALUES
 ('seppo.tarsky@tuni.fi', '1234', 'admin'),
 ('marjatta.tarsky@tuni.fi', '5678', 'admin'),
-('tarkka.tarkastelija@tuni.fi', '0000', 'user')
+('tarkka.tarkastelija@tuni.fi', '0000', 'user');
