@@ -103,6 +103,13 @@
 
         init();
 
+        // päivittää mainview sisällön 30 sekunnin välein
+        setInterval(() => {
+            if (!document.getElementById('mainView').classList.contains('hidden')) {
+                init();
+            }
+        }, 30000);
+
         let activeLocationId = null;
         let editMode = false;
 
@@ -154,6 +161,7 @@
             activeLocationId = null;
             // Clear URL parameters
             window.history.replaceState({}, document.title, window.location.pathname);
+            init();
         }
 
         function showLocation(id) {

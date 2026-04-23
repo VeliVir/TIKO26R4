@@ -149,6 +149,13 @@
         }
 
         init();
+        
+        // päivittää mainview sisällön 30 sekunnin välein
+        setInterval(() => {
+            if (!document.getElementById('mainView').classList.contains('hidden')) {
+                init();
+            }
+        }, 30000);
 
         function applyRoleRestrictions() {
             if (IS_ADMIN) return;
@@ -203,6 +210,7 @@
             document.getElementById('mainView').classList.remove('hidden');
             document.getElementById('detailsView').classList.add('hidden');
             activeAccessoryId = null;
+            init();
         }
 
         function populateSupplierDropdown(selectedId) {

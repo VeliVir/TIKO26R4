@@ -213,6 +213,13 @@
 
         init();
 
+        // päivittää mainview sisällön 30 sekunnin välein
+        setInterval(() => {
+            if (!document.getElementById('mainView').classList.contains('hidden')) {
+                init();
+            }
+        }, 30000);
+
         function applyRoleRestrictions() {
             if (IS_ADMIN) return;
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
@@ -569,6 +576,7 @@
             document.getElementById('detailsView').classList.add('hidden');
             document.getElementById('createInvoicePanel').classList.add('hidden');
             activeAgreementId = null;
+            init();
         }
 
         function resetForm() {

@@ -195,6 +195,13 @@
 
         init();
 
+        // päivittää mainview sisällön 30 sekunnin välein
+        setInterval(() => {
+            if (!document.getElementById('mainView').classList.contains('hidden')) {
+                init();
+            }
+        }, 30000);
+
         function formatCurrency(value) {
             return `${parseFloat(value).toFixed(2).replace('.', ',')} €`;
         }
@@ -251,6 +258,7 @@
             document.getElementById('detailsView').classList.add('hidden');
             activeInvoiceId = null;
             window.history.replaceState({}, document.title, window.location.pathname);
+            init();
         }
 
         function showInvoice(id) {
