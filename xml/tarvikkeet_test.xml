@@ -49,5 +49,16 @@
 			<yksikko>m</yksikko>
 		</ttiedot>
 	</tarvike>
+
+	<tarvike>
+		<ttiedot>
+			<id>1234</id>
+			<nimi>Sähkötöiden perusteet</nimi>
+			<merkki>Karhu</merkki>
+			<hinta>20.00</hinta>
+			<tyyppi>kirjallisuus</tyyppi>
+			<yksikko>kpl</yksikko>
+		</ttiedot>
+	</tarvike>
   
  </tarvikkeet>

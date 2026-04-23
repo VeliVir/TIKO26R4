@@ -220,6 +220,9 @@ switch ($method) {
             $merkki = trim((string)$t->merkki);
             $hinta  = floatval((string)$t->hinta);
             $yksikko = trim((string)$t->yksikko);
+            $tyyppi  = trim((string)$t->tyyppi);
+
+            $alv_uusi = ($tyyppi === 'kirjallisuus') ? 1.10 : 1.24;
 
             // Check for an active record matching by name within the same supplier
             $r_existing = pg_query_params($yhteys,
@@ -241,9 +244,9 @@ switch ($method) {
             if (!$existing) {
                 // Brand-new item — insert with DB-default alv (1.24)
                 $ok = pg_query_params($yhteys,
-                    "INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa)
-                     VALUES ($1, $2, $3, $4, $5, 0)",
-                    [$toimittaja_id, $nimi, $merkki ?: null, $yksikko ?: null, $hinta]);
+                    "INSERT INTO Tarvike (toimittaja_id, nimi, merkki, yksikko, hankintahinta, varastossa, alv)
+                     VALUES ($1, $2, $3, $4, $5, 0, $6)",
+                    [$toimittaja_id, $nimi, $merkki ?: null, $yksikko ?: null, $hinta, $alv_uusi]);
                 if (!$ok) {
                     pg_query($yhteys, "ROLLBACK");
                     ob_clean();
@@ -285,7 +288,7 @@ switch ($method) {
                             $yksikko ?: null,
                             $hinta,
                             (int)$existing['varastossa'],
-                            $existing['alv']
+                            $alv_uusi
                         ]);
                     if (!$ok) {
                         pg_query($yhteys, "ROLLBACK");

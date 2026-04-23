@@ -77,20 +77,21 @@ select * from Tarvike;
 XML-päivityksen jälkeen:
 
 select * from Tarvike;
- tarvike_id | toimittaja_id |               nimi               |   merkki   | yksikko | hankintahinta | varastossa | alv  |           luotu            |          muokattu          |         poistettu
-------------+---------------+----------------------------------+------------+---------+---------------+------------+------+----------------------------+----------------------------+----------------------------
-          1 |             1 | USB-kaapeli                      | Deltaco    | kpl     |          4.00 |         24 | 1.24 | 2026-04-23 10:42:39.861068 |                            |
-          2 |             2 | Sähköjohto                       | Harju      | m       |          1.00 |         28 | 1.24 | 2026-04-23 10:42:39.861068 |                            |
-          3 |             3 | Opaskirja                        | Apustajat  | kpl     |          8.00 |         18 | 1.10 | 2026-04-23 10:42:39.861068 |                            |
-          6 |             4 | Sähkökeskus                      | Junker     | kpl     |        300.00 |          3 | 1.24 | 2026-04-23 10:42:39.861068 |                            |
-          7 |             4 | Palohälytin                      | Incendium  | kpl     |          4.00 |         15 | 1.24 | 2026-04-23 10:42:39.861068 |                            |
-          8 |             4 | Häkähälytin                      | Incendium  | kpl     |          6.00 |          0 | 1.24 | 2026-04-23 10:42:39.861068 |                            |
-          9 |             2 | Akkulaatikko 350 x 200 x 240 mm  | Akulankka  | kpl     |         19.90 |          0 | 1.24 | 2026-04-23 10:43:01.422186 |                            |
-         10 |             2 | Ilmalämpöpumpun yleiskaukosäädin | Sinox      | kpl     |         15.00 |          0 | 1.24 | 2026-04-23 10:43:01.422186 |                            |
-          5 |             2 | Maakaapeli (VANHA)               | Kaapelsson | m       |          4.00 |          0 | 1.24 | 2026-04-23 10:42:39.861068 | 2026-04-23 10:43:01.422186 | 2026-04-23 10:43:01.422186
-         11 |             2 | Maakaapeli                       | Kaapelsson | m       |          4.50 |        300 | 1.24 | 2026-04-23 10:43:01.422186 |                            |
-          4 |             2 | Pistorasia (VANHA)               | Jussi      | kpl     |         10.00 |          0 | 1.24 | 2026-04-23 10:42:39.861068 | 2026-04-23 10:43:01.422186 | 2026-04-23 10:43:01.422186
-(11 rows)
+ tarvike_id | toimittaja_id |               nimi               |   merkki   | yksikko | hankintahinta | varastossa | alv  |           luotu            |         muokattu          |         poistettu
+------------+---------------+----------------------------------+------------+---------+---------------+------------+------+----------------------------+---------------------------+---------------------------
+          1 |             1 | USB-kaapeli                      | Deltaco    | kpl     |          4.00 |         24 | 1.24 | 2026-04-23 10:51:08.997923 |                           |
+          2 |             2 | Sähköjohto                       | Harju      | m       |          1.00 |         28 | 1.24 | 2026-04-23 10:51:08.997923 |                           |
+          3 |             3 | Opaskirja                        | Apustajat  | kpl     |          8.00 |         18 | 1.10 | 2026-04-23 10:51:08.997923 |                           |
+          6 |             4 | Sähkökeskus                      | Junker     | kpl     |        300.00 |          3 | 1.24 | 2026-04-23 10:51:08.997923 |                           |
+          7 |             4 | Palohälytin                      | Incendium  | kpl     |          4.00 |         15 | 1.24 | 2026-04-23 10:51:08.997923 |                           |
+          8 |             4 | Häkähälytin                      | Incendium  | kpl     |          6.00 |          0 | 1.24 | 2026-04-23 10:51:08.997923 |                           |
+          9 |             2 | Akkulaatikko 350 x 200 x 240 mm  | Akulankka  | kpl     |         19.90 |          0 | 1.24 | 2026-04-23 13:14:19.64604  |                           |
+         10 |             2 | Ilmalämpöpumpun yleiskaukosäädin | Sinox      | kpl     |         15.00 |          0 | 1.24 | 2026-04-23 13:14:19.64604  |                           |
+          5 |             2 | Maakaapeli (VANHA)               | Kaapelsson | m       |          4.00 |          0 | 1.24 | 2026-04-23 10:51:08.997923 | 2026-04-23 13:14:19.64604 | 2026-04-23 13:14:19.64604
+         11 |             2 | Maakaapeli                       | Kaapelsson | m       |          4.50 |        300 | 1.24 | 2026-04-23 13:14:19.64604  |                           |
+         12 |             2 | Sähkötöiden perusteet            | Karhu      | kpl     |         20.00 |          0 | 1.10 | 2026-04-23 13:14:19.64604  |                           |
+          4 |             2 | Pistorasia (VANHA)               | Jussi      | kpl     |         10.00 |          0 | 1.24 | 2026-04-23 10:51:08.997923 | 2026-04-23 13:14:19.64604 | 2026-04-23 13:14:19.64604
+(12 rows)
 
 select * from Suoritus;
  suoritus_id |    nimi     | hinta
