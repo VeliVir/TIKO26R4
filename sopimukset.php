@@ -347,9 +347,11 @@
         function populateAccessoryDropdown(select, selectedAccessory) {
             select.innerHTML = '<option value="">Valitse tarvike</option>';
             uniqueAccessories.forEach(accessory => {
+                if (accessory.poistettu && accessory.nimi !== selectedAccessory) return;
                 const option = document.createElement('option');
                 option.value = accessory.tarvike_id;
                 option.textContent = accessory.nimi;
+                option.disabled = !!accessory.poistettu;
                 if (accessory.nimi === selectedAccessory) {
                     option.selected = true;
                 }

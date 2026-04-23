@@ -147,7 +147,7 @@
                 init();
             }
         }, 30000);
-        
+
         function applyRoleRestrictions() {
             if (IS_ADMIN) return;
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
@@ -332,7 +332,8 @@
                         `XML tuotu onnistuneesti:\n` +
                         `${result.inserted} uutta tarviketta lisätty\n` +
                         `${result.updated} tarviketta päivitetty\n` +
-                        `${result.unchanged} tarviketta muuttumatta`
+                        `${result.unchanged} tarviketta muuttumatta\n` +
+                        `${result.deleted} tarviketta poistettu`
                     );
                     fileInput.value = '';
                     backToMain();

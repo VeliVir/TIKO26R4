@@ -263,7 +263,8 @@ switch ($method) {
                 if ($changed) {
                     // Move old record to history by setting poistettu
                     $ok = pg_query_params($yhteys,
-                        "UPDATE Tarvike SET poistettu = CURRENT_TIMESTAMP WHERE tarvike_id = $1",
+                        "UPDATE Tarvike SET poistettu = CURRENT_TIMESTAMP, nimi = nimi || ' (VANHA)', varastossa = 0 
+                         WHERE tarvike_id = $1",
                         [$existing['tarvike_id']]);
 
                     if (!$ok) {
@@ -298,6 +299,34 @@ switch ($method) {
                 }
             }
         }
+        
+        // Siirrä historiaan tuotteet jotka eivät ole XML:ssä
+        $xml_nimet = [];
+        foreach ($xml->tarvike as $tarvike) {
+            $xml_nimet[] = trim((string)$tarvike->ttiedot->nimi);
+        }
+
+        $deleted = 0;
+        if (!empty($xml_nimet)) {
+            $placeholders = implode(',', array_map(fn($i) => '$' . ($i + 2), array_keys($xml_nimet)));
+            $params = array_merge([$toimittaja_id], $xml_nimet);
+
+            $r_poisto = pg_query_params($yhteys,
+                "UPDATE Tarvike SET poistettu = CURRENT_TIMESTAMP, nimi = nimi || ' (VANHA)', varastossa = 0
+                 WHERE toimittaja_id = $1
+                 AND nimi NOT IN ($placeholders)
+                 AND poistettu IS NULL",
+                $params
+            );
+
+            if (!$r_poisto) {
+                pg_query($yhteys, "ROLLBACK");
+                ob_clean();
+                echo json_encode(['success' => false, 'error' => pg_last_error($yhteys)]);
+                break;
+            }
+            $deleted = pg_affected_rows($r_poisto);
+        }
 
         pg_query($yhteys, "COMMIT");
         ob_clean();
@@ -305,7 +334,8 @@ switch ($method) {
             'success'   => true,
             'inserted'  => $inserted,
             'updated'   => $updated,
-            'unchanged' => $unchanged
+            'unchanged' => $unchanged,
+            'deleted' => $deleted
         ]);
         break;
 }

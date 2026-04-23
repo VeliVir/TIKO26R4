@@ -58,7 +58,7 @@ switch ($method) {
             $tarvikeet_data = [];
         }
         
-        $sql_tarvikeTyypit = "SELECT tarvike_id, nimi FROM Tarvike";
+        $sql_tarvikeTyypit = "SELECT tarvike_id, nimi, poistettu FROM Tarvike";
 
         $result_tarvikeTyypit = pg_query($yhteys, $sql_tarvikeTyypit);
         $tarvikeTyypit_data = pg_fetch_all($result_tarvikeTyypit);

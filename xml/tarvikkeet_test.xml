@@ -35,7 +35,18 @@
 			<merkki>Kaapelsson</merkki>
 			<hinta>4.50</hinta>
 			<tyyppi>tarvike</tyyppi>
-			<yksikko>metri</yksikko>
+			<yksikko>m</yksikko>
+		</ttiedot>
+	</tarvike>
+
+	<tarvike>
+		<ttiedot>
+			<id>999-612</id>
+			<nimi>Sähköjohto</nimi>
+			<merkki>Harju</merkki>
+			<hinta>1.00</hinta>
+			<tyyppi>tarvike</tyyppi>
+			<yksikko>m</yksikko>
 		</ttiedot>
 	</tarvike>
   
