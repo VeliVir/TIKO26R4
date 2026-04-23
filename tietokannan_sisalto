@@ -1,0 +1,127 @@
+select * from Asiakas;
+ asiakas_id |   etunimi   | sukunimi |          osoite          |  puhelinnro  |           sahkoposti           |           luotu            | muokattu
+------------+-------------+----------+--------------------------+--------------+--------------------------------+----------------------------+----------
+          1 | Jaska       | Hosunen  | Mesikuja 10, Susimetsä   | 040 123 4567 | jaska.hosunen@gmail.com        | 2026-04-23 09:15:01.047216 |
+          2 | Lissu       | Jokinen  | Nurmitie 5, Aitolahti    | 050 987 6543 | lissu.jokinen@hotmail.com      | 2026-04-23 09:15:01.047216 |
+          3 | Masa        | Näsänen  | Masalantie 12, Kangasala | 044 321 7689 | masa.nasanen@tuni.fi           | 2026-04-23 09:15:01.047216 |
+          4 | Presidentti | Niinistö | Mariankatu 2, Helsinki   | 010 123 4567 | presidentti.niinisto@gmail.com | 2026-04-23 09:15:01.047216 |
+          5 | Vel         | Kainen   | Tikankuja 5, Kouvola     | 010 132 3567 | vel.kainen@gmail.com           | 2026-04-23 09:15:01.047216 |
+(5 rows)
+
+select * from Tyokohde;
+ kohde_id | asiakas_id |         nimi          |             osoite             |           luotu            | muokattu
+----------+------------+-----------------------+--------------------------------+----------------------------+----------
+        1 |          1 | Susimetsän asunto     | Mesikuja 10, Susimetsä         | 2026-04-23 09:15:01.047216 |
+        2 |          2 | Nurmitien asunto      | Nurmitie 5, Aitolahti          | 2026-04-23 09:15:01.047216 |
+        3 |          2 | Huitsinnevan toimisto | Kasinopolku 11, Huitsinneva    | 2026-04-23 09:15:01.047216 |
+        4 |          3 | Puotonkorven tehdas   | Puotonkorventie 1, Puotonkorpi | 2026-04-23 09:15:01.047216 |
+        5 |          3 | Masalantien asunto    | Masalantie 12, Kangasala       | 2026-04-23 09:15:01.047216 |
+        6 |          4 | Presidentinlinna      | Mariankatu 2, Helsinki         | 2026-04-23 09:15:01.047216 |
+        7 |          5 | Puumaja               | Kouvolan metsä, Kouvola        | 2026-04-23 09:15:01.047216 |
+        8 |          5 | Puumaja 2             | Kouvolan metsä, Kouvola        | 2026-04-23 09:15:01.047216 |
+(8 rows)
+
+select * from Sopimus;
+ sopimus_id | kohde_id |   tyyppi   | osia_laskussa |        luotu        |      muokattu
+------------+----------+------------+---------------+---------------------+---------------------
+          1 |        1 | Urakka     |             1 | 2025-09-01 00:00:00 |
+          2 |        2 | Tuntihinta |             1 | 2026-01-02 00:00:00 |
+          3 |        4 | Tuntihinta |             1 | 2026-01-03 00:00:00 |
+          4 |        3 | Urakka     |             1 | 2026-02-01 00:00:00 |
+          5 |        5 | Tuntihinta |             1 | 2026-02-02 00:00:00 |
+          6 |        7 | Tuntihinta |             1 | 2026-01-02 00:00:00 |
+          7 |        8 | Urakka     |             1 | 2026-04-02 00:00:00 |
+          8 |        6 | Urakka     |             2 | 2026-02-06 00:00:00 | 2026-02-20 00:00:00
+(8 rows)
+
+select * from Lasku;
+ lasku_id | sopimus_id | edellinen_lasku_id |    pvm     |  erapaiva  | maksupaiva
+----------+------------+--------------------+------------+------------+------------
+        1 |          1 |                    | 2025-10-01 | 2025-10-15 | 2025-12-01
+        2 |          1 |                  1 | 2025-10-25 | 2025-11-10 | 2025-12-01
+        3 |          1 |                  2 | 2025-11-27 | 2025-12-13 | 2025-12-01
+        4 |          2 |                    | 2026-02-01 | 2026-02-15 | 2026-02-15
+        5 |          3 |                    | 2026-02-01 | 2026-02-15 |
+        6 |          3 |                  5 | 2026-02-15 | 2026-03-01 |
+        7 |          3 |                  6 | 2026-03-05 | 2026-03-20 |
+        8 |          4 |                    | 2026-03-01 | 2026-03-15 |
+        9 |          5 |                    | 2026-03-01 | 2026-03-15 |
+       10 |          6 |                    | 2026-01-05 | 2026-01-20 |
+       11 |          6 |                 10 | 2026-01-21 | 2026-02-05 |
+       12 |          6 |                 11 | 2026-02-06 | 2026-02-21 |
+       13 |          6 |                 12 | 2026-02-22 | 2026-03-09 |
+(13 rows)
+
+select * from Toimittaja;
+ toimittaja_id |    nimi    |            osoite
+---------------+------------+------------------------------
+             1 | How-data   | Datumpolku 69, 33720 Tampere
+             2 | Moponet    | Kaarnankatu 2, Joensuu
+             3 | Tärsky Pub | Homeenkatu 420, Tampere
+             4 | Junk Co    | Tietokantakuja 1, Aitolahti
+(4 rows)
+
+select * from Tarvike;
+ tarvike_id | toimittaja_id |    nimi     |   merkki   | yksikko | hankintahinta | varastossa | alv  |           luotu            | muokattu | poistettu
+------------+---------------+-------------+------------+---------+---------------+------------+------+----------------------------+----------+-----------
+          1 |             1 | USB-kaapeli | Deltaco    | kpl     |          4.00 |         24 | 1.24 | 2026-04-23 09:15:01.047216 |          |
+          2 |             2 | Sähköjohto  | Harju      | m       |          1.00 |         28 | 1.24 | 2026-04-23 09:15:01.047216 |          |
+          3 |             3 | Opaskirja   | Apustajat  | kpl     |          8.00 |         18 | 1.10 | 2026-04-23 09:15:01.047216 |          |
+          4 |             2 | Pistorasia  | Jussi      | kpl     |         10.00 |         10 | 1.24 | 2026-04-23 09:15:01.047216 |          |
+          5 |             2 | Maakaapeli  | Kaapelsson | m       |          4.00 |        300 | 1.24 | 2026-04-23 09:15:01.047216 |          |
+          6 |             4 | Sähkökeskus | Junker     | kpl     |        300.00 |          3 | 1.24 | 2026-04-23 09:15:01.047216 |          |
+          7 |             4 | Palohälytin | Incendium  | kpl     |          4.00 |         15 | 1.24 | 2026-04-23 09:15:01.047216 |          |
+          8 |             4 | Häkähälytin | Incendium  | kpl     |          6.00 |          0 | 1.24 | 2026-04-23 09:15:01.047216 |          |
+(8 rows)
+
+select * from Suoritus;
+ suoritus_id |    nimi     | hinta
+-------------+-------------+-------
+           1 | Urakka      |
+           2 | Suunnittelu | 55.00
+           3 | Työ         | 45.00
+           4 | Aputyö      | 35.00
+(4 rows)
+
+select * from Sopimus_tarvike;
+ sopimus_id | tarvike_id |  maara  | hintatekija
+------------+------------+---------+-------------
+          1 |          1 |   1.000 |        1.00
+          2 |          2 |   3.000 |        0.90
+          2 |          3 |   1.000 |        1.00
+          2 |          4 |   1.000 |        0.80
+          3 |          5 | 100.000 |        0.90
+          3 |          6 |   1.000 |        0.95
+          4 |          7 |   2.000 |        1.00
+          5 |          2 |   3.000 |        1.00
+          5 |          4 |   1.000 |        1.00
+          6 |          7 |   2.000 |        1.00
+          7 |          2 |   3.000 |        1.30
+          7 |          5 |   5.000 |        1.20
+(12 rows)
+
+select * from Sopimus_suoritus;
+ suoritus_id | sopimus_id | tyomaara_tunneilla | hintatekija | urakka_hinta
+-------------+------------+--------------------+-------------+--------------
+           1 |          1 |                    |        1.00 |       100.00
+           2 |          2 |              3.000 |        0.90 |
+           3 |          2 |             12.000 |        1.00 |
+           2 |          3 |             25.000 |        0.80 |
+           3 |          3 |              7.000 |        0.90 |
+           4 |          3 |              3.000 |        1.00 |
+           1 |          4 |                    |        1.00 |        50.00
+           2 |          5 |              3.000 |        1.00 |
+           3 |          5 |             12.000 |        1.00 |
+           1 |          8 |                    |        1.00 |      5004.21
+           2 |          6 |              2.000 |        1.00 |
+           3 |          6 |             15.000 |        0.85 |
+           1 |          7 |                    |        1.30 |       200.00
+(13 rows)
+
+select * from Kayttaja;
+         sahkoposti          | salasana | rooli
+-----------------------------+----------+-------
+ seppo.tarsky@tuni.fi        | 1234     | admin
+ marjatta.tarsky@tuni.fi     | 5678     | admin
+ tarkka.tarkastelija@tuni.fi | 0000     | user
+(3 rows)
